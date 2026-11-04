@@ -238,6 +238,6 @@ Resumo em linguagem simples:
 
 Quem recebe uma cópia deve manter o aviso de copyright e o link da licença.
 
-Para uso comercial, é necessário autorização por escrito do autor.
+Para uso comercial, é necessário autorização por escrito do autor. O contato pode ser feito pelo perfil no GitHub: [@tiagoj-prog](https://github.com/tiagoj-prog).
 
 > Este resumo é apenas orientação. O texto do `LICENSE` é o que vale juridicamente.
