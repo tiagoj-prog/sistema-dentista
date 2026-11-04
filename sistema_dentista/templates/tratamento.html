@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Controle de tratamentos</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='visual_modern.css', v=6) }}"
+    >
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">Dr. Tiago J. Lima</div>
+
+    <nav>
+        <a href="/">Dashboard</a>
+        <a href="/agenda">Agenda</a>
+        <a href="/pacientes" class="active">Pacientes</a>
+        <a href="/financeiro">Financeiro</a>
+    </nav>
+</header>
+
+<main class="container treatment-page">
+
+    <div class="page-header">
+        <div>
+            <h1>Controle de tratamentos</h1>
+            <p>
+                Paciente:
+                <strong>{{ paciente["nome"] }}</strong>
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for(
+                'perfil_paciente',
+                paciente_id=paciente['id']
+            ) }}"
+            class="button secondary-button"
+        >
+            ← Voltar ao perfil
+        </a>
+    </div>
+
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria, mensagem in mensagens %}
+            <div class="alert {{ categoria }}">
+                {{ mensagem }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    {% set planejados = tratamentos|selectattr("status", "equalto", "Planejado")|list %}
+    {% set andamento = tratamentos|selectattr("status", "equalto", "Em andamento")|list %}
+    {% set concluidos = tratamentos|selectattr("status", "equalto", "Concluído")|list %}
+
+    <div class="treatment-stats">
+        <div class="treatment-stat">
+            <span>Planejados</span>
+            <strong>{{ planejados|length }}</strong>
+        </div>
+
+        <div class="treatment-stat">
+            <span>Em andamento</span>
+            <strong>{{ andamento|length }}</strong>
+        </div>
+
+        <div class="treatment-stat">
+            <span>Concluídos</span>
+            <strong>{{ concluidos|length }}</strong>
+        </div>
+    </div>
+
+    <section class="form-card">
+        <div class="section-title">
+            <div>
+                <h2>Novo tratamento / procedimento</h2>
+                <p class="section-description">
+                    Registre procedimentos gerais feitos no paciente,
+                    como limpeza, aplicação de flúor, manutenção,
+                    profilaxia, retorno preventivo e outros.
+                </p>
+            </div>
+        </div>
+
+        <form
+            action="{{ url_for(
+                'adicionar_tratamento_web',
+                paciente_id=paciente['id']
+            ) }}"
+            method="POST"
+            autocomplete="off"
+        >
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Procedimento</label>
+                    <input
+                        type="text"
+                        name="procedimento"
+                        placeholder="Ex.: Limpeza, aplicação de flúor, manutenção..."
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Data</label>
+                    <input
+                        type="date"
+                        name="data_inicio"
+                    >
+                </div>
+
+                <div class="form-group full">
+                    <label>Observação</label>
+                    <textarea
+                        name="observacao"
+                        rows="3"
+                        placeholder="Observações do procedimento, frequência, retorno, recomendações..."
+                    ></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="button primary">
+                + Adicionar
+            </button>
+        </form>
+    </section>
+
+    <section class="table-card">
+        <div class="section-title">
+            <div>
+                <h2>Histórico e acompanhamento</h2>
+                <p class="section-description">
+                    Área separada do odontograma. Aqui ficam apenas
+                    os procedimentos e tratamentos realizados no paciente.
+                </p>
+            </div>
+        </div>
+
+        {% if tratamentos %}
+            <div
+                class="treatment-list"
+                data-more-list
+                data-more-limit="5"
+                data-more-item=":scope > .treatment-item"
+            >
+                {% for item in tratamentos %}
+                    <article class="treatment-item">
+                        <div class="treatment-main">
+                            <div class="treatment-status-rail status-{{ item['status']|lower|replace('í','i')|replace(' ', '-') }}"></div>
+
+                            <div>
+                                <div class="treatment-title-row">
+                                    <h3>{{ item["procedimento"] }}</h3>
+
+                                    <span class="status treatment-status">
+                                        {{ item["status"] }}
+                                    </span>
+                                </div>
+
+                                <div class="treatment-meta">
+                                    {% if item["data_inicio"] %}
+                                        <span>
+                                             {{ item["data_inicio"] }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                {% if item["observacao"] %}
+                                    <p class="treatment-note">
+                                        {{ item["observacao"] }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="treatment-actions">
+                            {% if item["status"] != "Em andamento" %}
+                                <form
+                                    action="{{ url_for(
+                                        'status_tratamento_web',
+                                        paciente_id=paciente['id'],
+                                        tratamento_id=item['id'],
+                                        status='Em andamento'
+                                    ) }}"
+                                    method="POST"
+                                >
+                                    <button
+                                        type="submit"
+                                        class="small-button"
+                                    >
+                                        Em andamento
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            {% if item["status"] != "Concluído" %}
+                                <form
+                                    action="{{ url_for(
+                                        'status_tratamento_web',
+                                        paciente_id=paciente['id'],
+                                        tratamento_id=item['id'],
+                                        status='Concluído'
+                                    ) }}"
+                                    method="POST"
+                                >
+                                    <button
+                                        type="submit"
+                                        class="small-button confirm"
+                                    >
+                                        ✓ Concluir
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            <form
+                                action="{{ url_for(
+                                    'excluir_tratamento_web',
+                                    paciente_id=paciente['id'],
+                                    tratamento_id=item['id']
+                                ) }}"
+                                method="POST"
+                            >
+                                <button
+                                    type="submit"
+                                    class="delete-button"
+                                    onclick="return confirm('Excluir este procedimento?');"
+                                >
+                                    ️
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty small-empty">
+                <span></span>
+                <h3>Nenhum procedimento registrado</h3>
+                <p>
+                    Adicione acima tratamentos gerais como limpeza,
+                    aplicação de flúor, manutenção e retornos.
+                </p>
+            </div>
+        {% endif %}
+    </section>
+
+</main>
+
+<script src="{{ url_for('static', filename='mostrar_mais.js') }}"></script>
+</body>
+</html>

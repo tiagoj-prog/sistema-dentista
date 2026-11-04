@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - {{ paciente["nome"] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='visual_modern.css', v=6) }}">
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+
+    <style>
+        .responsavel-toggle-box {
+            margin: 4px 0 2px;
+            padding: 14px 16px;
+            border: 1px solid #dbe3ec;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        .responsavel-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            color: #344054;
+        }
+
+        .responsavel-toggle-label input {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            flex: 0 0 18px;
+        }
+
+        .responsavel-minor-note {
+            display: none;
+            margin: 8px 0 0 28px;
+            color: #b54708;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .responsavel-fields {
+            display: none;
+            grid-column: 1 / -1;
+            margin-top: 4px;
+            padding: 16px;
+            border: 1px solid #e4e7ec;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .responsavel-fields.active {
+            display: block;
+        }
+
+        .responsavel-fields-title {
+            margin: 0 0 14px;
+            color: #344054;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .responsavel-fields-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .responsavel-fields-grid .full {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 720px) {
+            .responsavel-fields-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .responsavel-fields-grid .full {
+                grid-column: auto;
+            }
+        }
+    </style>
+
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">Dr. Tiago J. Lima</div>
+    <nav>
+        <a href="/">Dashboard</a>
+        <a href="/agenda">Agenda</a>
+        <a href="/pacientes" class="active">Pacientes</a>
+        <a href="/financeiro">Financeiro</a>
+    </nav>
+</header>
+
+<main class="container">
+
+    <div class="page-header">
+        <div>
+            <a href="/pacientes" class="back-link">← Voltar para pacientes</a>
+            <h1>{{ paciente["nome"] }}</h1>
+            <p>Perfil, informações clínicas e recebimentos.</p>
+        </div>
+
+        <a
+            href="{{ url_for('odontograma_paciente', paciente_id=paciente['id']) }}"
+            class="button odontogram-button"
+        >
+             Abrir odontograma
+        </a>
+    </div>
+
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria, mensagem in mensagens %}
+            <div class="alert {{ categoria }}">{{ mensagem }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <section class="profile-card">
+        <div class="profile-header">
+            <div class="big-avatar">{{ paciente["nome"][0]|upper }}</div>
+            <div>
+                <h2>{{ paciente["nome"] }}</h2>
+                <p> {{ paciente["telefone"] }}</p>
+
+                {% if paciente["cpf"] or paciente["rg"] %}
+                    <p>
+                        {% if paciente["cpf"] %}
+                            CPF: {{ paciente["cpf"] }}
+                        {% endif %}
+                        {% if paciente["cpf"] and paciente["rg"] %}
+                            ·
+                        {% endif %}
+                        {% if paciente["rg"] %}
+                            RG: {{ paciente["rg"] }}
+                        {% endif %}
+                    </p>
+                {% endif %}
+
+                {% if paciente["data_nascimento"] %}
+                    <p>
+                         {{ data_nascimento_formatada }}
+                        {% if idade is not none %}
+                            · {{ idade }} anos
+                        {% endif %}
+                    </p>
+                {% endif %}
+
+                {% if paciente["tem_responsavel"] %}
+                    <p>
+                         Responsável:
+                        <strong>{{ paciente["responsavel_nome"] }}</strong>
+                        {% if paciente["responsavel_relacao"] %}
+                            · {{ paciente["responsavel_relacao"] }}
+                        {% endif %}
+                    </p>
+                {% endif %}
+
+                {% if paciente["ativo"] == 1 %}
+                    <span class="status confirmed">● Paciente ativo</span>
+                {% else %}
+                    <span class="status cancelled">● Paciente inativo</span>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    
+    <section class="form-card">
+        <h2>Informações do paciente</h2>
+
+        <form
+            action="{{ url_for('salvar_perfil_paciente', paciente_id=paciente['id']) }}"
+            method="POST"
+        >
+            <div class="form-grid">
+
+                <div class="form-group full">
+                    <label>Nome completo</label>
+                    <input
+                        type="text"
+                        name="nome"
+                        value="{{ paciente['nome'] }}"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>CPF</label>
+                    <input
+                        type="text"
+                        name="cpf"
+                        id="cpf-paciente"
+                        value="{{ paciente['cpf'] or '' }}"
+                        placeholder="000.000.000-00"
+                        inputmode="numeric"
+                        maxlength="14"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>RG</label>
+                    <input
+                        type="text"
+                        name="rg"
+                        value="{{ paciente['rg'] or '' }}"
+                        placeholder="RG do paciente"
+                        maxlength="25"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Data de nascimento</label>
+                    <input
+                        type="date"
+                        name="data_nascimento"
+                        id="data-nascimento-paciente"
+                        value="{{ paciente['data_nascimento'] or '' }}"
+                        max="{{ hoje }}"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Idade</label>
+                    <input
+                        type="text"
+                        id="idade-paciente"
+                        value="{% if idade is not none %}{{ idade }} anos{% endif %}"
+                        placeholder="Calculada automaticamente"
+                        readonly
+                    >
+                </div>
+
+                <div class="form-group full">
+                    <div class="responsavel-toggle-box">
+                        <label class="responsavel-toggle-label">
+                            <input
+                                type="checkbox"
+                                name="tem_responsavel"
+                                id="tem-responsavel"
+                                value="1"
+                                {% if paciente["tem_responsavel"] %}checked{% endif %}
+                            >
+                            <span>Informar responsável</span>
+                        </label>
+
+                        <p
+                            id="responsavel-menor-aviso"
+                            class="responsavel-minor-note"
+                        >
+                            Paciente menor de idade — recomenda-se informar o responsável.
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    id="campos-responsavel"
+                    class="responsavel-fields {% if paciente['tem_responsavel'] %}active{% endif %}"
+                >
+                    <p class="responsavel-fields-title">
+                        Dados do responsável
+                    </p>
+
+                    <div class="responsavel-fields-grid">
+                        <div class="form-group full">
+                            <label>Nome do responsável</label>
+                            <input
+                                type="text"
+                                name="responsavel_nome"
+                                id="responsavel-nome"
+                                value="{{ paciente['responsavel_nome'] or '' }}"
+                                placeholder="Nome completo do responsável"
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label>CPF do responsável</label>
+                            <input
+                                type="text"
+                                name="responsavel_cpf"
+                                id="responsavel-cpf"
+                                value="{{ paciente['responsavel_cpf'] or '' }}"
+                                placeholder="000.000.000-00"
+                                inputmode="numeric"
+                                maxlength="14"
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label>Relação com o paciente</label>
+                            <select
+                                name="responsavel_relacao"
+                                id="responsavel-relacao"
+                            >
+                                <option value="">Selecione</option>
+                                {% for relacao in [
+                                    "Pai",
+                                    "Mãe",
+                                    "Avó",
+                                    "Avô",
+                                    "Tio",
+                                    "Tia",
+                                    "Irmão",
+                                    "Irmã",
+                                    "Padrasto",
+                                    "Madrasta",
+                                    "Tutor(a)",
+                                    "Guardião(ã)",
+                                    "Responsável legal",
+                                    "Outro"
+                                ] %}
+                                    <option
+                                        value="{{ relacao }}"
+                                        {% if paciente["responsavel_relacao"] == relacao %}selected{% endif %}
+                                    >
+                                        {{ relacao }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group full">
+                    <label>WhatsApp</label>
+                    <input
+                        type="tel"
+                        name="telefone"
+                        value="{{ paciente['telefone'] }}"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Prontuário</label>
+                    <textarea
+                        name="prontuario"
+                        rows="5"
+                        placeholder="Informações do prontuário..."
+                    >{{ paciente["prontuario"] or "" }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Anamnese simples</label>
+                    <textarea
+                        name="anamnese"
+                        rows="5"
+                        placeholder="Alergias, medicamentos, observações clínicas..."
+                    >{{ paciente["anamnese"] or "" }}</textarea>
+                </div>
+
+                <div class="form-group full">
+                    <label>Endereço</label>
+                    <input
+                        type="text"
+                        name="endereco"
+                        value="{{ paciente['endereco'] or '' }}"
+                        placeholder="Endereço do paciente"
+                    >
+                </div>
+
+            </div>
+
+            <button type="submit" class="button primary">
+                 Salvar informações
+            </button>
+        </form>
+    </section>
+
+    <!-- A antiga aba/cartão Financeiro foi removida do perfil.
+         O paciente agora possui a própria área de A receber abaixo. -->
+    <section class="profile-actions-grid">
+        <a
+            href="{{ url_for('odontograma_paciente', paciente_id=paciente['id']) }}"
+            class="quick-card"
+        >
+            <span></span>
+            <strong>Odontograma</strong>
+            <small>Dentes, faces e condições clínicas</small>
+        </a>
+
+        <a
+            href="{{ url_for('tratamento_paciente', paciente_id=paciente['id']) }}"
+            class="quick-card"
+        >
+            <span></span>
+            <strong>Tratamento</strong>
+            <small>Limpezas, flúor, manutenções e outros procedimentos</small>
+        </a>
+    </section>
+
+    <!-- =====================================================
+         ORÇAMENTO ATUAL
+    ====================================================== -->
+    <section class="table-card">
+
+        <div class="section-title">
+            <div>
+                <h2>Novo orçamento</h2>
+                <p class="section-description">
+                    Adicione os procedimentos deste orçamento.
+                    Ao clicar em “Criar conta”, somente estes itens formarão
+                    uma nova conta individual.
+                </p>
+            </div>
+
+            <strong class="total-highlight">
+                Ainda não enviado:
+                R$ {{ "%.2f"|format(total_nao_transferido)|replace(".", ",") }}
+            </strong>
+        </div>
+
+        <form
+            action="{{ url_for('adicionar_orcamento_web', paciente_id=paciente['id']) }}"
+            method="POST"
+            class="inline-form"
+            autocomplete="off"
+        >
+            <select name="categoria" required>
+                <option value="Clínica Geral">Clínica Geral</option>
+                <option value="Ortodontia">Ortodontia</option>
+                <option value="Implantodontia">Implantodontia</option>
+            </select>
+
+            <input
+                type="text"
+                name="descricao"
+                placeholder="Procedimento"
+                autocomplete="off"
+                spellcheck="false"
+                required
+            >
+
+            <input
+                type="number"
+                name="valor"
+                step="0.01"
+                min="0"
+                placeholder="Valor"
+                autocomplete="off"
+                required
+            >
+
+            <button type="submit" class="button primary">
+                + Adicionar
+            </button>
+        </form>
+
+        {% if orcamentos %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Área</th>
+                        <th>Procedimento</th>
+                        <th>Valor</th>
+                        <th>Situação</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for item in orcamentos %}
+                    <tr>
+                        <td>{{ item["categoria"] }}</td>
+
+                        <td>{{ item["descricao"] }}</td>
+
+                        <td>
+                            <strong>
+                                R$ {{ "%.2f"|format(item["valor"])|replace(".", ",") }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {% if item["transferido"] %}
+                                <span class="status confirmed">
+                                    ✓ Conta #{{ item["conta_id"] }}
+                                </span>
+                            {% else %}
+                                <span class="status waiting">
+                                    ● Novo orçamento
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <form
+                                action="{{ url_for('excluir_orcamento_web', orcamento_id=item['id']) }}"
+                                method="POST"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="paciente_id"
+                                    value="{{ paciente['id'] }}"
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="delete-button"
+                                    onclick="return confirm('Excluir este item do orçamento?');"
+                                >
+                                    ️ Excluir
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if total_nao_transferido > 0 %}
+            <div class="send-budget-box">
+                <div>
+                    <span class="send-budget-label">
+                        Valor desta nova conta
+                    </span>
+
+                    <strong>
+                        R$ {{ "%.2f"|format(total_nao_transferido)|replace(".", ",") }}
+                    </strong>
+
+                    <small class="budget-individual-note">
+                        Esse valor não será somado às contas antigas.
+                    </small>
+                </div>
+
+                <form
+                    action="{{ url_for('passar_orcamento_receber_web', paciente_id=paciente['id']) }}"
+                    method="POST"
+                    class="send-budget-form"
+                    autocomplete="off"
+                >
+                    <div class="form-group">
+                        <label>Vencimento</label>
+                        <input
+                            type="date"
+                            name="vencimento"
+                            value="{{ hoje }}"
+                            required
+                        >
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="button primary"
+                        onclick="return confirm('Criar uma nova conta individual com este orçamento?');"
+                    >
+                        → Criar conta de R$ {{ "%.2f"|format(total_nao_transferido)|replace(".", ",") }}
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- =====================================================
+         CONTAS PENDENTES — UMA POR ORÇAMENTO
+    ====================================================== -->
+    <section class="table-card patient-receivable-card">
+
+        <div class="section-title">
+            <div>
+                <h2>A receber — {{ paciente["nome"] }}</h2>
+                <p class="section-description">
+                    Cada orçamento possui sua própria conta e seu próprio saldo.
+                </p>
+            </div>
+        </div>
+
+        {% if contas_pendentes %}
+            <div class="individual-accounts-list">
+
+            {% for conta in contas_pendentes %}
+                <article class="individual-account-card">
+
+                    <div class="individual-account-header">
+                        <div>
+                            <span class="individual-account-id">
+                                Orçamento #{{ conta["id"] }}
+                            </span>
+
+                            <h3>
+                                R$ {{ "%.2f"|format(conta["valor_total"])|replace(".", ",") }}
+                            </h3>
+
+                            <small>
+                                Vencimento: {{ conta["vencimento"] }}
+                            </small>
+                        </div>
+
+                        <div class="receivable-header-actions">
+                            <span class="status waiting">
+                                ● Pendente
+                            </span>
+
+                            <form
+                                action="{{ url_for(
+                                    'excluir_conta_paciente_web',
+                                    paciente_id=paciente['id'],
+                                    conta_id=conta['id']
+                                ) }}"
+                                method="POST"
+                            >
+                                <button
+                                    type="submit"
+                                    class="delete-button"
+                                    onclick="return confirm('Apagar somente este A receber? Os outros orçamentos do paciente não serão alterados.');"
+                                >
+                                    ️ Apagar conta
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="patient-receivable-summary">
+                        <div class="receivable-summary-card">
+                            <span>Valor do orçamento</span>
+                            <strong>
+                                R$ {{ "%.2f"|format(conta["valor_total"])|replace(".", ",") }}
+                            </strong>
+                        </div>
+
+                        <div class="receivable-summary-card paid">
+                            <span>Pago nesta conta</span>
+                            <strong>
+                                R$ {{ "%.2f"|format(conta["total_pago"])|replace(".", ",") }}
+                            </strong>
+                        </div>
+
+                        <div class="receivable-summary-card remaining">
+                            <span>Falta nesta conta</span>
+                            <strong>
+                                R$ {{ "%.2f"|format(conta["saldo"])|replace(".", ",") }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    {% if conta["itens"] %}
+                    <details class="individual-account-items">
+                        <summary>Ver procedimentos deste orçamento</summary>
+
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Área</th>
+                                        <th>Procedimento</th>
+                                        <th>Valor</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                {% for item in conta["itens"] %}
+                                    <tr>
+                                        <td>{{ item["categoria"] }}</td>
+                                        <td>{{ item["descricao"] }}</td>
+                                        <td>
+                                            R$ {{ "%.2f"|format(item["valor"])|replace(".", ",") }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                    {% endif %}
+
+                    <div class="payment-progress">
+                        <div class="payment-progress-info">
+                            <span>Pagamento deste orçamento</span>
+                            <strong>
+                                {{ "%.0f"|format(conta["percentual_pago"]) }}%
+                            </strong>
+                        </div>
+
+                        <div class="payment-progress-track">
+                            <div
+                                class="payment-progress-fill"
+                                {{ ('style="width: ' ~ conta['percentual_pago'] ~ '%;"')|safe }}
+                            ></div>
+                        </div>
+                    </div>
+
+                    <div class="payment-entry-box">
+                        <div>
+                            <h3>Registrar pagamento</h3>
+                            <p>
+                                Este pagamento será aplicado somente ao
+                                orçamento #{{ conta["id"] }}.
+                            </p>
+                        </div>
+
+                        <form
+                            action="{{ url_for(
+                                'registrar_pagamento_paciente_web',
+                                paciente_id=paciente['id'],
+                                conta_id=conta['id']
+                            ) }}"
+                            method="POST"
+                            class="payment-entry-form"
+                            autocomplete="off"
+                        >
+                            <div class="form-group">
+                                <label>Valor pago</label>
+                                <input
+                                    type="number"
+                                    name="valor"
+                                    step="0.01"
+                                    min="0.01"
+                                    max="{{ conta['saldo'] }}"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label>Data</label>
+                                <input
+                                    type="date"
+                                    name="data_pagamento"
+                                    value="{{ hoje }}"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group payment-note">
+                                <label>Observação</label>
+                                <input
+                                    type="text"
+                                    name="observacao"
+                                    placeholder="PIX, cartão, dinheiro..."
+                                    autocomplete="off"
+                                    spellcheck="false"
+                                >
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="button primary payment-submit"
+                            >
+                                + Registrar
+                            </button>
+                        </form>
+                    </div>
+
+                    {% if conta["pagamentos"] %}
+                        <div class="payment-history-title">
+                            <h3>Pagamentos deste orçamento</h3>
+                        </div>
+
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Valor</th>
+                                        <th>Observação</th>
+                                        <th>Ação</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                {% for pagamento in conta["pagamentos"] %}
+                                    <tr>
+                                        <td>{{ pagamento["data_pagamento"] }}</td>
+                                        <td>
+                                            R$ {{ "%.2f"|format(pagamento["valor"])|replace(".", ",") }}
+                                        </td>
+                                        <td>{{ pagamento["observacao"] or "-" }}</td>
+                                        <td>
+                                            <form
+                                                action="{{ url_for(
+                                                    'excluir_pagamento_paciente_web',
+                                                    paciente_id=paciente['id'],
+                                                    pagamento_id=pagamento['id']
+                                                ) }}"
+                                                method="POST"
+                                            >
+                                                <button
+                                                    type="submit"
+                                                    class="delete-button"
+                                                    onclick="return confirm('Excluir este pagamento?');"
+                                                >
+                                                    ️ Excluir
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+
+                </article>
+            {% endfor %}
+
+            </div>
+
+        {% else %}
+            <div class="empty small-empty">
+                <span></span>
+                <h3>Nenhuma conta pendente</h3>
+                <p>
+                    Crie um novo orçamento acima e envie para A receber.
+                </p>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- =====================================================
+         ORÇAMENTOS QUITADOS
+    ====================================================== -->
+    {% if contas_quitadas %}
+    <section class="table-card">
+        <div class="section-title">
+            <div>
+                <h2>Orçamentos quitados</h2>
+                <p class="section-description">
+                    Histórico individual dos tratamentos já pagos totalmente.
+                </p>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Conta</th>
+                        <th>Valor do orçamento</th>
+                        <th>Data da quitação</th>
+                        <th>Situação</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for conta in contas_quitadas %}
+                    <tr>
+                        <td>
+                            <strong>#{{ conta["id"] }}</strong>
+                        </td>
+
+                        <td>
+                            R$ {{ "%.2f"|format(conta["valor_total"])|replace(".", ",") }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ conta["data_quitacao"] or "-" }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            <span class="status confirmed">
+                                ✓ Pago totalmente
+                            </span>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+
+
+</main>
+
+<!-- =====================================================
+        RESPONSÁVEL
+    ====================================================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const nascimentoInput = document.getElementById(
+        "data-nascimento-paciente"
+    );
+    const idadeInput = document.getElementById(
+        "idade-paciente"
+    );
+    const cpfInput = document.getElementById(
+        "cpf-paciente"
+    );
+    const responsavelCheck = document.getElementById(
+        "tem-responsavel"
+    );
+    const responsavelCampos = document.getElementById(
+        "campos-responsavel"
+    );
+    const responsavelNome = document.getElementById(
+        "responsavel-nome"
+    );
+    const responsavelCpf = document.getElementById(
+        "responsavel-cpf"
+    );
+    const responsavelRelacao = document.getElementById(
+        "responsavel-relacao"
+    );
+    const responsavelMenorAviso = document.getElementById(
+        "responsavel-menor-aviso"
+    );
+
+    function atualizarIdade() {
+        if (!nascimentoInput || !idadeInput) {
+            return;
+        }
+
+        if (!nascimentoInput.value) {
+            idadeInput.value = "";
+
+            if (responsavelMenorAviso) {
+                responsavelMenorAviso.style.display = "none";
+            }
+
+            return;
+        }
+
+        const partes = nascimentoInput.value
+            .split("-")
+            .map(Number);
+
+        if (partes.length !== 3) {
+            idadeInput.value = "";
+            return;
+        }
+
+        const ano = partes[0];
+        const mes = partes[1];
+        const dia = partes[2];
+        const hoje = new Date();
+
+        let idade = hoje.getFullYear() - ano;
+
+        const aindaNaoFezAniversario =
+            (hoje.getMonth() + 1 < mes) ||
+            (
+                hoje.getMonth() + 1 === mes &&
+                hoje.getDate() < dia
+            );
+
+        if (aindaNaoFezAniversario) {
+            idade -= 1;
+        }
+
+        idadeInput.value =
+            idade >= 0
+                ? idade + (idade === 1 ? " ano" : " anos")
+                : "";
+
+        if (responsavelMenorAviso) {
+            responsavelMenorAviso.style.display =
+                idade >= 0 && idade < 18
+                    ? "block"
+                    : "none";
+        }
+    }
+
+    function atualizarCamposResponsavel() {
+        if (!responsavelCheck || !responsavelCampos) {
+            return;
+        }
+
+        const ativo = responsavelCheck.checked;
+
+        responsavelCampos.classList.toggle(
+            "active",
+            ativo
+        );
+
+        [
+            responsavelNome,
+            responsavelCpf,
+            responsavelRelacao
+        ].forEach(function (campo) {
+            if (!campo) {
+                return;
+            }
+
+            campo.required = ativo;
+            campo.disabled = !ativo;
+        });
+    }
+
+    function aplicarMascaraCpf(campo) {
+        if (!campo) {
+            return;
+        }
+
+        let valor = campo.value
+            .replace(/\D/g, "")
+            .slice(0, 11);
+
+        if (valor.length > 9) {
+            valor = valor.replace(
+                /^(\d{3})(\d{3})(\d{3})(\d{1,2}).*/,
+                "$1.$2.$3-$4"
+            );
+        } else if (valor.length > 6) {
+            valor = valor.replace(
+                /^(\d{3})(\d{3})(\d{1,3}).*/,
+                "$1.$2.$3"
+            );
+        } else if (valor.length > 3) {
+            valor = valor.replace(
+                /^(\d{3})(\d{1,3}).*/,
+                "$1.$2"
+            );
+        }
+
+        campo.value = valor;
+    }
+
+    if (nascimentoInput) {
+        nascimentoInput.addEventListener(
+            "change",
+            atualizarIdade
+        );
+        nascimentoInput.addEventListener(
+            "input",
+            atualizarIdade
+        );
+    }
+
+    if (cpfInput) {
+        cpfInput.addEventListener(
+            "input",
+            function () {
+                aplicarMascaraCpf(cpfInput);
+            }
+        );
+    }
+
+    if (responsavelCpf) {
+        responsavelCpf.addEventListener(
+            "input",
+            function () {
+                aplicarMascaraCpf(responsavelCpf);
+            }
+        );
+    }
+
+    if (responsavelCheck) {
+        responsavelCheck.addEventListener(
+            "change",
+            atualizarCamposResponsavel
+        );
+    }
+
+    atualizarCamposResponsavel();
+    atualizarIdade();
+});
+</script>
+
+</body>
+</html>

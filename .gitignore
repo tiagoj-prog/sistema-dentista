@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Arquivos de ambiente e segredos locais
+.env
+.env.local
+.secret_key
+
+# SQLite runtime e dados mutáveis
+dentista.db
+dentista.db-wal
+dentista.db-shm
+dentista.db-journal
+backups/
+
+# Cache e temporários
+.pytest_cache/
+.cache/
+
+# VS Code: preservar arquivos compartilháveis, ignorar apenas temporários/pessoais
+.vscode/*.log
+.vscode/*.tmp
+.vscode/*.cache

@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financeiro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='visual_modern.css', v=6) }}">
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">Dr. Tiago J. Lima</div>
+
+    <nav>
+        <a href="/">Dashboard</a>
+        <a href="/agenda">Agenda</a>
+        <a href="/pacientes">Pacientes</a>
+        <a href="/financeiro" class="active">Financeiro</a>
+    </nav>
+</header>
+
+<main class="container">
+
+    <div class="page-header">
+        <div>
+            <h1>Controle financeiro</h1>
+            <p>Fluxo de caixa, contas, orçamentos e análise de gastos.</p>
+        </div>
+    </div>
+
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria, mensagem in mensagens %}
+            <div class="alert {{ categoria }}">{{ mensagem }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="finance-tabs">
+        <button
+            type="button"
+            class="finance-tab-button active"
+            data-finance-tab="geral"
+            onclick="abrirAbaFinanceiro('geral', this)"
+        >
+            Visão geral
+        </button>
+
+        <button
+            type="button"
+            class="finance-tab-button"
+            data-finance-tab="mensais"
+            onclick="abrirAbaFinanceiro('mensais', this)"
+        >
+            Gastos mensais
+        </button>
+
+        <button
+            type="button"
+            class="finance-tab-button"
+            data-finance-tab="anuais"
+            onclick="abrirAbaFinanceiro('anuais', this)"
+        >
+            Gastos anuais
+        </button>
+    </div>
+
+    <div
+        id="finance-tab-geral"
+        class="finance-tab-panel active"
+    >
+
+    <!-- RESUMO -->
+    <div class="finance-dashboard">
+
+        <div class="finance-card positive">
+            <span>A receber</span>
+            <strong>R$ {{ "%.2f"|format(total_receber)|replace(".", ",") }}</strong>
+            <small>Contas pendentes</small>
+        </div>
+
+        <div class="finance-card negative">
+            <span>A pagar</span>
+            <strong>R$ {{ "%.2f"|format(total_pagar)|replace(".", ",") }}</strong>
+            <small>Contas pendentes</small>
+        </div>
+
+        <div class="finance-card">
+            <span>Entradas do mês</span>
+            <strong>R$ {{ "%.2f"|format(entradas)|replace(".", ",") }}</strong>
+            <small>{{ mes_atual_nome }} / {{ ano_atual }}</small>
+        </div>
+
+        <div class="finance-card">
+            <span>Saídas do mês</span>
+            <strong>R$ {{ "%.2f"|format(saidas)|replace(".", ",") }}</strong>
+            <small>{{ mes_atual_nome }} / {{ ano_atual }}</small>
+        </div>
+
+        <div class="finance-card highlight">
+            <span>Saldo do mês</span>
+            <strong>R$ {{ "%.2f"|format(saldo)|replace(".", ",") }}</strong>
+            <small>{{ mes_atual_nome }} / {{ ano_atual }}</small>
+        </div>
+
+    </div>
+
+
+
+    <!-- DESPESAS RECORRENTES -->
+    <section class="table-card recurring-expenses-card">
+
+        <div class="section-title">
+            <div>
+                <h2>Despesas recorrentes</h2>
+                <p class="section-description">
+                    Cadastre despesas mensais ou anuais. O sistema cria automaticamente
+                    a conta a pagar do ciclo atual sem duplicar lançamentos.
+                </p>
+            </div>
+        </div>
+
+        <form
+            action="{{ url_for('adicionar_despesa_recorrente_web') }}"
+            method="POST"
+            class="recurring-form"
+        >
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" name="descricao" placeholder="Ex.: Aluguel" required>
+            </div>
+
+            <div class="form-group">
+                <label>Fornecedor</label>
+                <input type="text" name="fornecedor" placeholder="Opcional">
+            </div>
+
+            <div class="form-group">
+                <label>Categoria</label>
+                <select name="categoria">
+                    <option value="Aluguel">Aluguel</option>
+                    <option value="Água">Água</option>
+                    <option value="Energia">Energia</option>
+                    <option value="Internet">Internet</option>
+                    <option value="Material">Material</option>
+                    <option value="Software">Software</option>
+                    <option value="Impostos e taxas">Impostos e taxas</option>
+                    <option value="Manutenção">Manutenção</option>
+                    <option value="Outros" selected>Outros</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Valor</label>
+                <input type="number" name="valor" step="0.01" min="0" placeholder="0,00" required>
+            </div>
+
+            <div class="form-group">
+                <label>Recorrência</label>
+                <select name="recorrencia" id="recorrencia" onchange="ajustarRecorrencia()">
+                    <option value="Mensal">Mensal</option>
+                    <option value="Anual">Anual</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Dia do vencimento</label>
+                <input type="number" name="dia_vencimento" min="1" max="31" placeholder="Ex.: 10" required>
+            </div>
+
+            <div class="form-group" id="grupo-mes-vencimento" style="display:none;">
+                <label>Mês do vencimento</label>
+                <select name="mes_vencimento" id="mes-vencimento">
+                    <option value="1">Janeiro</option>
+                    <option value="2">Fevereiro</option>
+                    <option value="3">Março</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Maio</option>
+                    <option value="6">Junho</option>
+                    <option value="7">Julho</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                </select>
+            </div>
+
+            <div class="form-group recurring-submit">
+                <label>&nbsp;</label>
+                <button type="submit" class="button primary">+ Adicionar recorrência</button>
+            </div>
+        </form>
+
+        {% if despesas_recorrentes %}
+        <div class="table-container recurring-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Categoria</th>
+                        <th>Fornecedor</th>
+                        <th>Valor</th>
+                        <th>Periodicidade</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for despesa in despesas_recorrentes %}
+                    <tr>
+                        <td><strong>{{ despesa["descricao"] }}</strong></td>
+                        <td>{{ despesa["categoria"] or "Outros" }}</td>
+                        <td>{{ despesa["fornecedor"] or "-" }}</td>
+                        <td>R$ {{ "%.2f"|format(despesa["valor"])|replace(".", ",") }}</td>
+                        <td>{{ despesa["recorrencia"] }}</td>
+                        <td>
+                            {% if despesa["recorrencia"] == "Mensal" %}
+                                Todo dia {{ despesa["dia_vencimento"] }}
+                            {% else %}
+                                {{ "%02d"|format(despesa["dia_vencimento"]) }}/{{ "%02d"|format(despesa["mes_vencimento"]) }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if despesa["ativa"] %}
+                                <span class="status confirmed">● Ativa</span>
+                            {% else %}
+                                <span class="status cancelled">● Pausada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="actions">
+                                {% if despesa["ativa"] %}
+                                <form action="{{ url_for('status_despesa_recorrente_web', despesa_id=despesa['id'], ativa=0) }}" method="POST">
+                                    <button class="small-button cancel" type="submit">Pausar</button>
+                                </form>
+                                {% else %}
+                                <form action="{{ url_for('status_despesa_recorrente_web', despesa_id=despesa['id'], ativa=1) }}" method="POST">
+                                    <button class="small-button confirm" type="submit">Ativar</button>
+                                </form>
+                                {% endif %}
+
+                                <form action="{{ url_for('excluir_despesa_recorrente_web', despesa_id=despesa['id']) }}" method="POST">
+                                    <button
+                                        class="delete-button"
+                                        type="submit"
+                                        onclick="return confirm('Excluir esta regra recorrente? As contas já geradas serão mantidas.');"
+                                    >
+                                        Excluir
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div class="empty small-empty">
+                <span>️</span>
+                <h3>Nenhuma despesa recorrente</h3>
+                <p>Cadastre aluguel, internet, impostos e outras despesas fixas.</p>
+            </div>
+        {% endif %}
+
+    </section>
+
+    <!-- FLUXO DE CAIXA -->
+    <section class="table-card">
+
+        <div class="section-title">
+            <div>
+                <h2>Fluxo de caixa</h2>
+                <p class="section-description">
+                    Registre entradas e saídas do mês atual.
+                    No dia 1, esta visão começa automaticamente um novo mês;
+                    o histórico permanece em Gastos mensais e Gastos anuais.
+                </p>
+            </div>
+        </div>
+
+        <form action="/financeiro/movimentacao/adicionar" method="POST" class="inline-form">
+
+            <input
+                type="text"
+                name="descricao"
+                placeholder="Descrição"
+                required
+            >
+
+            <select name="tipo">
+                <option value="Entrada">Entrada</option>
+                <option value="Saída">Saída</option>
+            </select>
+
+            <input
+                type="number"
+                name="valor"
+                step="0.01"
+                min="0"
+                placeholder="Valor"
+                required
+            >
+
+            <input
+                type="date"
+                name="data"
+                value="{{ hoje }}"
+                required
+            >
+
+            <button type="submit" class="button primary">
+                + Registrar
+            </button>
+
+        </form>
+
+        {% if movimentacoes %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Valor</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for item in movimentacoes %}
+                    <tr>
+                        <td>{{ item["data"] }}</td>
+                        <td>{{ item["descricao"] }}</td>
+                        <td>
+                            {% if item["tipo"] == "Entrada" %}
+                                <span class="status confirmed">● Entrada</span>
+                            {% else %}
+                                <span class="status cancelled">● Saída</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>
+                                R$ {{ "%.2f"|format(item["valor"])|replace(".", ",") }}
+                            </strong>
+                        </td>
+                        <td>
+                            <form action="{{ url_for('excluir_movimentacao_web', movimentacao_id=item['id']) }}" method="POST">
+                                <button
+                                    class="delete-button"
+                                    type="submit"
+                                    onclick="return confirm('Excluir esta movimentação? Esta ação não pode ser desfeita.');"
+                                >
+                                    ️ Excluir
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div class="empty small-empty">
+                <span></span>
+                <h3>Nenhuma movimentação</h3>
+                <p>Registre a primeira entrada ou saída.</p>
+            </div>
+        {% endif %}
+
+    </section>
+
+
+    <!-- CONTAS A RECEBER -->
+    <section class="table-card">
+
+        <div class="section-title">
+            <div>
+                <h2>Contas a receber</h2>
+                <p class="section-description">Valores que os pacientes devem pagar.</p>
+            </div>
+        </div>
+
+        <form action="/financeiro/receber/adicionar" method="POST" class="inline-form">
+
+            <select name="paciente_id">
+                <option value="">Paciente (opcional)</option>
+
+                {% for paciente in pacientes %}
+                    <option value="{{ paciente['id'] }}">
+                        {{ paciente["nome"] }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <input
+                type="text"
+                name="descricao"
+                placeholder="Descrição"
+                required
+            >
+
+            <input
+                type="number"
+                name="valor"
+                step="0.01"
+                min="0"
+                placeholder="Valor"
+                required
+            >
+
+            <input
+                type="date"
+                name="vencimento"
+                required
+            >
+
+            <button type="submit" class="button primary">
+                + Adicionar
+            </button>
+
+        </form>
+
+        {% if receber %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Paciente</th>
+                        <th>Descrição</th>
+                        <th>Vencimento</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for conta in receber %}
+                    <tr>
+                        <td>{{ conta["paciente_nome"] or "Sem paciente" }}</td>
+                        <td>{{ conta["descricao"] }}</td>
+                        <td>{{ conta["vencimento"] }}</td>
+                        <td>
+                            <strong>R$ {{ "%.2f"|format(conta["valor"])|replace(".", ",") }}</strong>
+                        </td>
+                        <td>
+                            {% if conta["status"] == "Pago" %}
+                                <span class="status confirmed">● Pago</span>
+                            {% else %}
+                                <span class="status waiting">● Pendente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="actions">
+                                {% if conta["status"] != "Pago" %}
+                                <form
+                                    action="{{ url_for('pagar_receber_web', conta_id=conta['id']) }}"
+                                    method="POST"
+                                >
+                                    <button class="small-button confirm" type="submit">
+                                        ✓ Pago
+                                    </button>
+                                </form>
+                                {% endif %}
+
+                                <form action="{{ url_for('excluir_receber_web', conta_id=conta['id']) }}" method="POST">
+                                    <button
+                                        class="delete-button"
+                                        type="submit"
+                                        onclick="return confirm('Excluir esta conta a receber? Esta ação não pode ser desfeita.');"
+                                    >
+                                        ️ Excluir
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    </section>
+
+
+    <!-- CONTAS A PAGAR -->
+    <section class="table-card">
+
+        <div class="section-title">
+            <div>
+                <h2>Contas a pagar</h2>
+                <p class="section-description">Despesas da clínica.</p>
+            </div>
+        </div>
+
+        <form action="/financeiro/pagar/adicionar" method="POST" class="inline-form">
+
+            <input
+                type="text"
+                name="fornecedor"
+                placeholder="Fornecedor"
+            >
+
+            <input
+                type="text"
+                name="descricao"
+                placeholder="Descrição"
+                required
+            >
+
+            <input
+                type="number"
+                name="valor"
+                step="0.01"
+                min="0"
+                placeholder="Valor"
+                required
+            >
+
+            <input
+                type="date"
+                name="vencimento"
+                required
+            >
+
+            <button type="submit" class="button primary">
+                + Adicionar
+            </button>
+
+        </form>
+
+        {% if pagar %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fornecedor</th>
+                        <th>Descrição</th>
+                        <th>Vencimento</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for conta in pagar %}
+                    <tr>
+                        <td>{{ conta["fornecedor"] or "-" }}</td>
+                        <td>{{ conta["descricao"] }}</td>
+                        <td>{{ conta["vencimento"] }}</td>
+                        <td>
+                            <strong>R$ {{ "%.2f"|format(conta["valor"])|replace(".", ",") }}</strong>
+                        </td>
+                        <td>
+                            {% if conta["status"] == "Pago" %}
+                                <span class="status confirmed">● Pago</span>
+                            {% else %}
+                                <span class="status waiting">● Pendente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="actions">
+                                {% if conta["status"] != "Pago" %}
+                                <form
+                                    action="{{ url_for('pagar_conta_web', conta_id=conta['id']) }}"
+                                    method="POST"
+                                >
+                                    <button class="small-button confirm" type="submit">
+                                        ✓ Pago
+                                    </button>
+                                </form>
+                                {% endif %}
+
+                                <form action="{{ url_for('excluir_pagar_web', conta_id=conta['id']) }}" method="POST">
+                                    <button
+                                        class="delete-button"
+                                        type="submit"
+                                        onclick="return confirm('Excluir esta conta a pagar? Esta ação não pode ser desfeita.');"
+                                    >
+                                        ️ Excluir
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    </section>
+
+    <!-- FECHA A ABA VISÃO GERAL -->
+    </div>
+
+
+    <!-- =========================================
+         GASTOS MENSAIS
+    ========================================== -->
+    <div
+        id="finance-tab-mensais"
+        class="finance-tab-panel"
+    >
+        <section class="table-card spending-period-card">
+            <div class="section-title">
+                <div>
+                    <h2>Gastos mensais</h2>
+                    <p class="section-description">
+                        Resumo completo por mês: despesas, pagamentos,
+                        entradas, saídas e saldo do fluxo de caixa.
+                    </p>
+                </div>
+
+                <form
+                    action="{{ url_for('financeiro') }}"
+                    method="GET"
+                    class="year-filter-form"
+                >
+                    <input
+                        type="hidden"
+                        name="aba"
+                        value="mensais"
+                    >
+
+                    <label for="ano-gastos">
+                        Ano
+                    </label>
+
+                    <select
+                        id="ano-gastos"
+                        name="ano"
+                        onchange="this.form.submit()"
+                    >
+                        {% for ano in anos_gastos %}
+                            <option
+                                value="{{ ano }}"
+                                {% if ano == ano_selecionado %}selected{% endif %}
+                            >
+                                {{ ano }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+
+            <div class="spending-summary-cards">
+                <div class="spending-summary-card">
+                    <span>Despesas no ano</span>
+                    <strong>
+                        R$ {{ "%.2f"|format(total_gastos_ano)|replace(".", ",") }}
+                    </strong>
+                </div>
+
+                <div class="spending-summary-card paid">
+                    <span>Pago no ano</span>
+                    <strong>
+                        R$ {{ "%.2f"|format(total_gastos_ano_pago)|replace(".", ",") }}
+                    </strong>
+                </div>
+
+                <div class="spending-summary-card pending">
+                    <span>Pendente no ano</span>
+                    <strong>
+                        R$ {{ "%.2f"|format(total_gastos_ano_pendente)|replace(".", ",") }}
+                    </strong>
+                </div>
+
+                <div class="spending-summary-card paid">
+                    <span>Entradas no ano</span>
+                    <strong>
+                        R$ {{ "%.2f"|format(total_entradas_ano)|replace(".", ",") }}
+                    </strong>
+                </div>
+
+                <div class="spending-summary-card pending">
+                    <span>Saídas no ano</span>
+                    <strong>
+                        R$ {{ "%.2f"|format(total_saidas_ano)|replace(".", ",") }}
+                    </strong>
+                </div>
+
+                <div class="spending-summary-card">
+                    <span>Saldo do fluxo no ano</span>
+                    <strong>
+                        R$ {{ "%.2f"|format(saldo_fluxo_ano)|replace(".", ",") }}
+                    </strong>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mês</th>
+                            <th>Despesas</th>
+                            <th>Pago</th>
+                            <th>Pendente</th>
+                            <th>Entradas</th>
+                            <th>Saídas</th>
+                            <th>Saldo</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for mes in gastos_mensais %}
+                            <tr>
+                                <td>
+                                    <strong>{{ mes["mes_nome"] }}</strong>
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        R$ {{ "%.2f"|format(mes["total"])|replace(".", ",") }}
+                                    </strong>
+                                    <small>{{ mes["quantidade"] }} conta(s)</small>
+                                </td>
+
+                                <td class="expense-paid">
+                                    R$ {{ "%.2f"|format(mes["pago"])|replace(".", ",") }}
+                                </td>
+
+                                <td class="expense-pending">
+                                    R$ {{ "%.2f"|format(mes["pendente"])|replace(".", ",") }}
+                                </td>
+
+                                <td class="expense-paid">
+                                    R$ {{ "%.2f"|format(mes["entradas"])|replace(".", ",") }}
+                                </td>
+
+                                <td class="expense-pending">
+                                    R$ {{ "%.2f"|format(mes["saidas"])|replace(".", ",") }}
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        R$ {{ "%.2f"|format(mes["saldo"])|replace(".", ",") }}
+                                    </strong>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="monthly-bars">
+                {% set maior_mes = gastos_mensais|max(attribute="total") %}
+                {% for mes in gastos_mensais %}
+                    {% if maior_mes and maior_mes['total'] > 0 %}
+                        {% set largura_barra = (mes['total'] / maior_mes['total'] * 100) %}
+                    {% else %}
+                        {% set largura_barra = 0 %}
+                    {% endif %}
+                    <div class="monthly-bar-row">
+                        <span>{{ mes["mes_nome"][:3] }}</span>
+
+                        <div class="monthly-bar-track">
+                            <div
+                                class="monthly-bar-fill"
+                               data-largura="{{ largura_barra }}"
+                            ></div>
+                        </div>
+
+                        <strong>
+                            R$ {{ "%.2f"|format(mes["total"])|replace(".", ",") }}
+                        </strong>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <!-- =========================================
+         GASTOS ANUAIS
+    ========================================== -->
+    <div
+        id="finance-tab-anuais"
+        class="finance-tab-panel"
+    >
+        <section class="table-card spending-period-card">
+            <div class="section-title">
+                <div>
+                    <h2>Gastos anuais</h2>
+                    <p class="section-description">
+                        Comparação anual de despesas, entradas, saídas e saldo do fluxo de caixa.
+                    </p>
+                </div>
+            </div>
+
+            {% if gastos_anuais %}
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ano</th>
+                                <th>Despesas</th>
+                                <th>Pago</th>
+                                <th>Pendente</th>
+                                <th>Entradas</th>
+                                <th>Saídas</th>
+                                <th>Saldo</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for ano in gastos_anuais %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ ano["ano"] }}</strong>
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            R$ {{ "%.2f"|format(ano["total"])|replace(".", ",") }}
+                                        </strong>
+                                        <small>{{ ano["quantidade"] }} conta(s)</small>
+                                    </td>
+
+                                    <td class="expense-paid">
+                                        R$ {{ "%.2f"|format(ano["pago"])|replace(".", ",") }}
+                                    </td>
+
+                                    <td class="expense-pending">
+                                        R$ {{ "%.2f"|format(ano["pendente"])|replace(".", ",") }}
+                                    </td>
+
+                                    <td class="expense-paid">
+                                        R$ {{ "%.2f"|format(ano["entradas"])|replace(".", ",") }}
+                                    </td>
+
+                                    <td class="expense-pending">
+                                        R$ {{ "%.2f"|format(ano["saidas"])|replace(".", ",") }}
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            R$ {{ "%.2f"|format(ano["saldo"])|replace(".", ",") }}
+                                        </strong>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty small-empty">
+                    <span></span>
+                    <h3>Ainda não há gastos anuais</h3>
+                    <p>
+                        Os dados aparecerão aqui conforme despesas ou movimentações de caixa forem registradas.
+                    </p>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+
+</main>
+
+
+<script>
+
+function abrirAbaFinanceiro(nome, botao) {
+    document
+        .querySelectorAll(".finance-tab-panel")
+        .forEach(function (painel) {
+            painel.classList.remove("active");
+        });
+
+    document
+        .querySelectorAll(".finance-tab-button")
+        .forEach(function (item) {
+            item.classList.remove("active");
+        });
+
+    const painel = document.getElementById(
+        "finance-tab-" + nome
+    );
+
+    if (painel) {
+        painel.classList.add("active");
+    }
+
+    if (botao) {
+        botao.classList.add("active");
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("aba", nome);
+    window.history.replaceState({}, "", url);
+}
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const parametros = new URLSearchParams(
+        window.location.search
+    );
+
+    const aba = parametros.get("aba") || "geral";
+
+    const botao = document.querySelector(
+        '[data-finance-tab="' + aba + '"]'
+    );
+
+    if (botao) {
+        abrirAbaFinanceiro(
+            aba,
+            botao
+        );
+    }
+});
+
+
+function ajustarRecorrencia() {
+    const recorrencia = document.getElementById("recorrencia").value;
+    const grupoMes = document.getElementById("grupo-mes-vencimento");
+    const mes = document.getElementById("mes-vencimento");
+
+    if (recorrencia === "Anual") {
+        grupoMes.style.display = "flex";
+        mes.required = true;
+    } else {
+        grupoMes.style.display = "none";
+        mes.required = false;
+    }
+}
+
+ajustarRecorrencia();
+</script>
+
+
+<script src="{{ url_for('static', filename='mostrar_mais.js') }}"></script>
+<script>
+    document.querySelectorAll(
+        ".monthly-bar-fill[data-largura]"
+    ).forEach(function (barra) {
+
+        const largura = parseFloat(
+            barra.dataset.largura
+        ) || 0;
+
+        barra.style.width =
+            Math.max(
+                0,
+                Math.min(100, largura)
+            ) + "%";
+    });
+</script>
+</body>
+</html>

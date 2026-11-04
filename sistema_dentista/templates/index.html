@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Clínica Odontológica</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='visual_modern.css', v=6) }}">
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">Dr. Tiago J. Lima</div>
+    <nav>
+        <a href="/" class="active">Dashboard</a>
+        <a href="/agenda">Agenda</a>
+        <a href="/pacientes">Pacientes</a>
+        <a href="/financeiro">Financeiro</a>
+    </nav>
+</header>
+
+<main class="container">
+
+    <div class="page-header">
+        <div>
+            <h1>Dashboard</h1>
+            <p>Visão geral da clínica.</p>
+        </div>
+    </div>
+
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria, mensagem in mensagens %}
+            <div class="alert {{ categoria }}">{{ mensagem }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span>Pacientes ativos</span>
+            <strong>{{ total_pacientes }}</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Consultas</span>
+            <strong>{{ total }}</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Confirmadas</span>
+            <strong>{{ confirmadas }}</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Aguardando</span>
+            <strong>{{ aguardando }}</strong>
+        </div>
+    </div>
+
+    <div class="stats-grid finance-stats">
+        <div class="stat-card">
+            <span>A receber</span>
+            <strong>R$ {{ "%.2f"|format(total_receber)|replace(".", ",") }}</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>A pagar</span>
+            <strong>R$ {{ "%.2f"|format(total_pagar)|replace(".", ",") }}</strong>
+        </div>
+    </div>
+
+    <div class="quick-grid">
+        <a href="/pacientes" class="quick-card">
+            <span></span>
+            <strong>Pacientes</strong>
+            <small>Pesquisar e abrir perfis</small>
+        </a>
+
+        <a href="/agenda" class="quick-card">
+            <span></span>
+            <strong>Agenda</strong>
+            <small>Gerenciar consultas</small>
+        </a>
+
+        <a href="/financeiro" class="quick-card">
+            <span></span>
+            <strong>Financeiro</strong>
+            <small>Caixa, contas e documentos</small>
+        </a>
+    </div>
+
+</main>
+</body>
+</html>

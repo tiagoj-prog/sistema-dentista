@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Agenda</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='visual_modern.css', v=6) }}"
+    >
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+
+<style id="paleta-clinica-sincronizada">
+:root {
+    --pc-limpeza-bg: #f3f4f6;
+    --pc-limpeza-main: #cbd5e1;
+    --pc-limpeza-text: #475569;
+
+    --pc-restauracao-bg: #dbeafe;
+    --pc-restauracao-main: #3b82f6;
+    --pc-restauracao-text: #1d4ed8;
+
+    --pc-manutencao-bg: #dcfce7;
+    --pc-manutencao-main: #22c55e;
+    --pc-manutencao-text: #166534;
+
+    --pc-implante-bg: #ede9fe;
+    --pc-implante-main: #8b5cf6;
+    --pc-implante-text: #5b21b6;
+
+    --pc-carie-bg: #fee2e2;
+    --pc-carie-main: #ef4444;
+    --pc-carie-text: #991b1b;
+
+    --pc-ausente-bg: #4b5563;
+    --pc-ausente-main: #374151;
+    --pc-ausente-text: #ffffff;
+
+    --pc-extracao-bg: #fef3c7;
+    --pc-extracao-main: #eab308;
+    --pc-extracao-text: #854d0e;
+
+    --pc-canal-bg: #dbe4f0;
+    --pc-canal-main: #1e3a8a;
+    --pc-canal-text: #172554;
+
+    --pc-protese-bg: #fce7f3;
+    --pc-protese-main: #ec4899;
+    --pc-protese-text: #9d174d;
+
+    --pc-fraturado-bg: #ffedd5;
+    --pc-fraturado-main: #f97316;
+    --pc-fraturado-text: #9a3412;
+
+    /* Exclusivos da Agenda */
+    --pc-ortodontia-bg: #cffafe;
+    --pc-ortodontia-main: #0891b2;
+    --pc-ortodontia-text: #155e75;
+
+    --pc-avaliacao-bg: #e0f2fe;
+    --pc-avaliacao-main: #0284c7;
+    --pc-avaliacao-text: #075985;
+
+    --pc-retorno-bg: #f1f5f9;
+    --pc-retorno-main: #64748b;
+    --pc-retorno-text: #334155;
+
+    --pc-sem-cor-bg: #ffffff;
+    --pc-sem-cor-main: #d0d5dd;
+    --pc-sem-cor-text: #475467;
+}
+
+/* Legenda compartilhada */
+.procedure-color-legend {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border: 1px solid #e3e7ed;
+    border-radius: 11px;
+    background: #fff;
+}
+
+.procedure-color-legend > strong {
+    display: block;
+    margin-bottom: 9px;
+    color: #475467;
+    font-size: 12px;
+}
+
+.procedure-color-legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 15px;
+}
+
+.procedure-color-legend-items span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #475467;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.procedure-color-dot {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, .12);
+}
+
+.pc-limpeza { background: var(--pc-limpeza-main) !important; }
+.pc-restauracao { background: var(--pc-restauracao-main) !important; }
+.pc-manutencao { background: var(--pc-manutencao-main) !important; }
+.pc-implante { background: var(--pc-implante-main) !important; }
+.pc-carie { background: var(--pc-carie-main) !important; }
+.pc-ausente { background: var(--pc-ausente-main) !important; }
+.pc-extracao { background: var(--pc-extracao-main) !important; }
+.pc-canal { background: var(--pc-canal-main) !important; }
+.pc-protese { background: var(--pc-protese-main) !important; }
+.pc-fraturado { background: var(--pc-fraturado-main) !important; }
+.pc-ortodontia { background: var(--pc-ortodontia-main) !important; }
+.pc-avaliacao { background: var(--pc-avaliacao-main) !important; }
+.pc-retorno { background: var(--pc-retorno-main) !important; }
+.pc-sem-cor {
+    background: #ffffff !important;
+    border-color: var(--pc-sem-cor-main) !important;
+}
+
+/* Agenda */
+.event-limpeza {
+    background: var(--pc-limpeza-bg) !important;
+    color: var(--pc-limpeza-text) !important;
+    border-left: 4px solid var(--pc-limpeza-main) !important;
+}
+.event-restauracao {
+    background: var(--pc-restauracao-bg) !important;
+    color: var(--pc-restauracao-text) !important;
+    border-left: 4px solid var(--pc-restauracao-main) !important;
+}
+.event-manutencao {
+    background: var(--pc-manutencao-bg) !important;
+    color: var(--pc-manutencao-text) !important;
+    border-left: 4px solid var(--pc-manutencao-main) !important;
+}
+.event-implante {
+    background: var(--pc-implante-bg) !important;
+    color: var(--pc-implante-text) !important;
+    border-left: 4px solid var(--pc-implante-main) !important;
+}
+.event-carie {
+    background: var(--pc-carie-bg) !important;
+    color: var(--pc-carie-text) !important;
+    border-left: 4px solid var(--pc-carie-main) !important;
+}
+.event-ausente {
+    background: var(--pc-ausente-bg) !important;
+    color: var(--pc-ausente-text) !important;
+    border-left: 4px solid var(--pc-ausente-main) !important;
+}
+.event-extracao {
+    background: var(--pc-extracao-bg) !important;
+    color: var(--pc-extracao-text) !important;
+    border-left: 4px solid var(--pc-extracao-main) !important;
+}
+.event-canal {
+    background: var(--pc-canal-bg) !important;
+    color: var(--pc-canal-text) !important;
+    border-left: 4px solid var(--pc-canal-main) !important;
+}
+.event-protese {
+    background: var(--pc-protese-bg) !important;
+    color: var(--pc-protese-text) !important;
+    border-left: 4px solid var(--pc-protese-main) !important;
+}
+.event-fraturado {
+    background: var(--pc-fraturado-bg) !important;
+    color: var(--pc-fraturado-text) !important;
+    border-left: 4px solid var(--pc-fraturado-main) !important;
+}
+
+.event-ortodontia {
+    background: var(--pc-ortodontia-bg) !important;
+    color: var(--pc-ortodontia-text) !important;
+    border-left: 4px solid var(--pc-ortodontia-main) !important;
+}
+
+.event-avaliacao {
+    background: var(--pc-avaliacao-bg) !important;
+    color: var(--pc-avaliacao-text) !important;
+    border-left: 4px solid var(--pc-avaliacao-main) !important;
+}
+
+.event-retorno {
+    background: var(--pc-retorno-bg) !important;
+    color: var(--pc-retorno-text) !important;
+    border-left: 4px solid var(--pc-retorno-main) !important;
+}
+
+.event-sem-cor {
+    background: #ffffff !important;
+    color: #344054 !important;
+    border-left: 4px solid #d0d5dd !important;
+}
+
+.agenda-procedure-picker {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+}
+
+.agenda-procedure-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid #e0e4ea;
+    border-radius: 9px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.agenda-procedure-option:hover {
+    background: #f8fafc;
+}
+
+.agenda-procedure-option input {
+    position: absolute;
+    opacity: 0;
+}
+
+.agenda-procedure-option .procedure-swatch {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+    border-radius: 50%;
+    border: 2px solid rgba(0,0,0,.10);
+}
+
+.agenda-procedure-option small {
+    color: #344054;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.agenda-procedure-option input:checked + .procedure-swatch {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #344054;
+}
+
+/* Odontograma: dentes e faces */
+.state-dot.estado-limpeza,
+.odonto-q-face.estado-limpeza {
+    background: var(--pc-limpeza-bg) !important;
+    border-color: var(--pc-limpeza-main) !important;
+    color: var(--pc-limpeza-text) !important;
+}
+.odonto-q-tooth.estado-limpeza .odonto-q-outline {
+    fill: var(--pc-limpeza-bg) !important;
+    stroke: var(--pc-limpeza-main) !important;
+}
+
+.state-dot.estado-restauracao,
+.odonto-q-face.estado-restauracao {
+    background: var(--pc-restauracao-bg) !important;
+    border-color: var(--pc-restauracao-main) !important;
+    color: var(--pc-restauracao-text) !important;
+}
+.odonto-q-tooth.estado-restauracao .odonto-q-outline {
+    fill: var(--pc-restauracao-bg) !important;
+    stroke: var(--pc-restauracao-main) !important;
+}
+
+.state-dot.estado-manutencao,
+.odonto-q-face.estado-manutencao {
+    background: var(--pc-manutencao-bg) !important;
+    border-color: var(--pc-manutencao-main) !important;
+    color: var(--pc-manutencao-text) !important;
+}
+.odonto-q-tooth.estado-manutencao .odonto-q-outline {
+    fill: var(--pc-manutencao-bg) !important;
+    stroke: var(--pc-manutencao-main) !important;
+}
+
+.state-dot.estado-implante,
+.odonto-q-face.estado-implante {
+    background: var(--pc-implante-bg) !important;
+    border-color: var(--pc-implante-main) !important;
+    color: var(--pc-implante-text) !important;
+}
+.odonto-q-tooth.estado-implante .odonto-q-outline {
+    fill: var(--pc-implante-bg) !important;
+    stroke: var(--pc-implante-main) !important;
+}
+
+.state-dot.estado-carie,
+.odonto-q-face.estado-carie {
+    background: var(--pc-carie-bg) !important;
+    border-color: var(--pc-carie-main) !important;
+    color: var(--pc-carie-text) !important;
+}
+.odonto-q-tooth.estado-carie .odonto-q-outline {
+    fill: var(--pc-carie-bg) !important;
+    stroke: var(--pc-carie-main) !important;
+}
+
+.state-dot.estado-ausente,
+.odonto-q-face.estado-ausente {
+    background: var(--pc-ausente-bg) !important;
+    border-color: var(--pc-ausente-main) !important;
+    color: var(--pc-ausente-text) !important;
+}
+.odonto-q-tooth.estado-ausente .odonto-q-outline {
+    fill: var(--pc-ausente-bg) !important;
+    stroke: var(--pc-ausente-main) !important;
+    opacity: .82 !important;
+}
+
+.state-dot.estado-extracao,
+.odonto-q-face.estado-extracao {
+    background: var(--pc-extracao-bg) !important;
+    border-color: var(--pc-extracao-main) !important;
+    color: var(--pc-extracao-text) !important;
+}
+.odonto-q-tooth.estado-extracao .odonto-q-outline {
+    fill: var(--pc-extracao-bg) !important;
+    stroke: var(--pc-extracao-main) !important;
+}
+
+.state-dot.estado-canal,
+.odonto-q-face.estado-canal {
+    background: var(--pc-canal-bg) !important;
+    border-color: var(--pc-canal-main) !important;
+    color: var(--pc-canal-text) !important;
+}
+.odonto-q-tooth.estado-canal .odonto-q-outline {
+    fill: var(--pc-canal-bg) !important;
+    stroke: var(--pc-canal-main) !important;
+}
+
+.state-dot.estado-protese,
+.odonto-q-face.estado-protese {
+    background: var(--pc-protese-bg) !important;
+    border-color: var(--pc-protese-main) !important;
+    color: var(--pc-protese-text) !important;
+}
+.odonto-q-tooth.estado-protese .odonto-q-outline {
+    fill: var(--pc-protese-bg) !important;
+    stroke: var(--pc-protese-main) !important;
+}
+
+.state-dot.estado-fraturado,
+.odonto-q-face.estado-fraturado {
+    background: var(--pc-fraturado-bg) !important;
+    border-color: var(--pc-fraturado-main) !important;
+    color: var(--pc-fraturado-text) !important;
+}
+.odonto-q-tooth.estado-fraturado .odonto-q-outline {
+    fill: var(--pc-fraturado-bg) !important;
+    stroke: var(--pc-fraturado-main) !important;
+}
+
+/* Compatibilidade visual com nomes antigos ainda existentes */
+.state-dot.estado-restaurado,
+.odonto-q-face.estado-restaurado {
+    background: var(--pc-restauracao-bg) !important;
+    border-color: var(--pc-restauracao-main) !important;
+}
+.odonto-q-tooth.estado-restaurado .odonto-q-outline {
+    fill: var(--pc-restauracao-bg) !important;
+    stroke: var(--pc-restauracao-main) !important;
+}
+
+.state-dot.estado-extracao-indicada,
+.odonto-q-face.estado-extracao-indicada {
+    background: var(--pc-extracao-bg) !important;
+    border-color: var(--pc-extracao-main) !important;
+}
+.odonto-q-tooth.estado-extracao-indicada .odonto-q-outline {
+    fill: var(--pc-extracao-bg) !important;
+    stroke: var(--pc-extracao-main) !important;
+}
+
+@media (max-width: 720px) {
+    .agenda-procedure-picker {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+
+<style id="agenda-patient-autocomplete-style">
+.agenda-patient-search {
+    position: relative;
+}
+
+.agenda-patient-suggestions {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 40;
+    display: none;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 6px;
+    border: 1px solid #dbe3ec;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, .14);
+}
+
+.agenda-patient-suggestions.open {
+    display: block;
+}
+
+.agenda-patient-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 11px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.agenda-patient-option:hover,
+.agenda-patient-option:focus {
+    background: #f8fafc;
+    outline: none;
+}
+
+.agenda-patient-option strong,
+.agenda-patient-option small {
+    display: block;
+}
+
+.agenda-patient-option strong {
+    color: #344054;
+    font-size: 13px;
+}
+
+.agenda-patient-option small {
+    margin-top: 2px;
+    color: #667085;
+    font-size: 11px;
+}
+
+.agenda-patient-option-mark {
+    flex: 0 0 auto;
+    color: #667085;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.agenda-patient-selected {
+    display: none;
+    margin-top: 6px;
+    color: #027a48;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.agenda-patient-selected.visible {
+    display: block;
+}
+
+.agenda-patient-empty {
+    display: none;
+    padding: 10px 11px;
+    color: #667085;
+    font-size: 12px;
+}
+
+.agenda-patient-empty.visible {
+    display: block;
+}
+</style>
+
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">Dr. Tiago J. Lima</div>
+
+    <nav>
+        <a href="/">Dashboard</a>
+        <a href="/agenda" class="active">Agenda</a>
+        <a href="/pacientes">Pacientes</a>
+        <a href="/financeiro">Financeiro</a>
+    </nav>
+</header>
+
+<main class="container agenda-visual-page">
+
+    <div class="page-header agenda-page-header">
+        <div>
+            <h1>Agenda</h1>
+            <p>
+                Agenda independente. Você pode selecionar um paciente
+                cadastrado para preencher o telefone automaticamente
+                ou digitar qualquer pessoa manualmente.
+            </p>
+        </div>
+
+        <button
+            type="button"
+            class="button primary"
+            onclick="abrirNovoEvento()"
+        >
+            + Novo agendamento
+        </button>
+    </div>
+
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria, mensagem in mensagens %}
+            <div class="alert {{ categoria }}">
+                {{ mensagem }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <section class="agenda-toolbar">
+        <div class="agenda-navigation">
+            <a
+                class="agenda-nav-button"
+                href="{{ url_for('agenda', semana=agenda.anterior) }}"
+                aria-label="Semana anterior"
+            >
+                ‹
+            </a>
+
+            <a
+                class="agenda-today-button"
+                href="{{ url_for('agenda') }}"
+            >
+                Hoje
+            </a>
+
+            <a
+                class="agenda-nav-button"
+                href="{{ url_for('agenda', semana=agenda.proxima) }}"
+                aria-label="Próxima semana"
+            >
+                ›
+            </a>
+        </div>
+
+        <strong class="agenda-period">
+            {{ agenda.titulo }}
+        </strong>
+
+        <div class="agenda-legend">
+            <span><i class="legend-dot confirmado"></i> Confirmado</span>
+            <span><i class="legend-dot agendado"></i> Agendado</span>
+            <span><i class="legend-dot concluido"></i> Concluído</span>
+        </div>
+    </section>
+
+
+    <section class="procedure-color-legend">
+        <strong>Legenda das cores (opcional)</strong>
+        <div class="procedure-color-legend-items">
+            <span><i class="procedure-color-dot pc-limpeza"></i>Limpeza</span>
+            <span><i class="procedure-color-dot pc-restauracao"></i>Restauração</span>
+            <span><i class="procedure-color-dot pc-manutencao"></i>Manutenção</span>
+            <span><i class="procedure-color-dot pc-implante"></i>Implante</span>
+            <span><i class="procedure-color-dot pc-extracao"></i>Extração</span>
+            <span><i class="procedure-color-dot pc-canal"></i>Canal</span>
+            <span><i class="procedure-color-dot pc-protese"></i>Prótese</span>
+            <span><i class="procedure-color-dot pc-ortodontia"></i>Ortodontia</span>
+            <span><i class="procedure-color-dot pc-avaliacao"></i>Avaliação</span>
+            <span><i class="procedure-color-dot pc-retorno"></i>Retorno</span>
+        </div>
+    </section>
+
+    <section class="weekly-calendar">
+
+        <div class="calendar-header">
+            <div class="calendar-time-head"></div>
+
+            {% for dia in agenda.dias %}
+                <div
+                    class="calendar-day-head {% if dia.hoje %}today{% endif %}"
+                >
+                    <span>{{ dia.nome }}</span>
+                    <strong>{{ dia.dia }}</strong>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="calendar-body">
+
+            <div class="calendar-time-axis">
+                {% for horario in agenda.horarios[:-1] %}
+                    <div class="calendar-time-label">
+                        {% if horario.endswith(':00') %}
+                            {{ horario }}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% for dia in agenda.dias %}
+                <div
+                    class="calendar-day-column {% if dia.hoje %}today{% endif %}"
+                    data-date="{{ dia.data }}"
+                >
+                    {% for horario in agenda.horarios[:-1] %}
+                        <button
+                            type="button"
+                            class="calendar-slot"
+                            data-date="{{ dia.data }}"
+                            data-time="{{ horario }}"
+                            onclick="abrirNovoEvento(
+                                this.dataset.date,
+                                this.dataset.time
+                            )"
+                            aria-label="Agendar {{ dia.data }} {{ horario }}"
+                        ></button>
+                    {% endfor %}
+
+                    {% for evento in dia.eventos %}
+                        <button
+                            type="button"
+                            class="
+                                calendar-event
+                                event-{{ evento['cor'] }}
+                                status-{{ evento['status']|lower|replace('í','i')|replace(' ', '-') }}
+                            "
+                            data-top="{{ evento['top'] }}"
+                            data-height="{{ evento['altura'] }}"
+                            data-id="{{ evento['id'] }}"
+                            data-nome="{{ evento['nome']|e }}"
+                            data-telefone="{{ evento['telefone']|e }}"
+                            data-titulo="{{ evento['titulo']|e }}"
+                            data-data="{{ evento['data'] }}"
+                            data-inicio="{{ evento['hora_inicio'] }}"
+                            data-fim="{{ evento['hora_fim'] }}"
+                            data-status="{{ evento['status'] }}"
+                            data-observacao="{{ evento['observacao']|e }}"
+                            onclick="abrirEvento(this)"
+                        >
+                            <span class="event-time">
+                                {{ evento["hora_inicio"] }}
+                            </span>
+                            <strong>{{ evento["nome"] }}</strong>
+                            <small>{{ evento["titulo"] }}</small>
+                        </button>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+        </div>
+    </section>
+
+</main>
+
+
+<!-- NOVO AGENDAMENTO -->
+<div
+    class="agenda-modal-backdrop"
+    id="novoEventoModal"
+    onclick="fecharModalFundo(event, 'novoEventoModal')"
+>
+    <section class="agenda-modal">
+        <div class="agenda-modal-header">
+            <div>
+                <span class="modal-kicker">Agenda</span>
+                <h2>Novo agendamento</h2>
+            </div>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="fecharModal('novoEventoModal')"
+            >
+                ×
+            </button>
+        </div>
+
+        <form
+            action="{{ url_for('adicionar_evento_agenda_web') }}"
+            method="POST"
+            class="agenda-event-form"
+            autocomplete="off"
+        >
+            <div class="form-grid two agenda-form-grid">
+                <div class="form-group agenda-patient-search">
+                    <label>Nome</label>
+                    <input
+                        type="text"
+                        name="nome"
+                        id="agendaPacienteNome"
+                        placeholder="Digite o nome ou telefone"
+                        autocomplete="off"
+                        aria-autocomplete="list"
+                        aria-controls="agendaPacienteSugestoes"
+                        required
+                    >
+
+                    <div
+                        id="agendaPacienteSugestoes"
+                        class="agenda-patient-suggestions"
+                        role="listbox"
+                    >
+                        {% for paciente in pacientes %}
+                            <button
+                                type="button"
+                                class="agenda-patient-option"
+                                data-nome="{{ paciente['nome']|e }}"
+                                data-telefone="{{ (paciente['telefone'] or '')|e }}"
+                                role="option"
+                            >
+                                <span>
+                                    <strong>{{ paciente["nome"] }}</strong>
+                                    <small>
+                                        {{ paciente["telefone"] or "Sem telefone cadastrado" }}
+                                    </small>
+                                </span>
+                                <span class="agenda-patient-option-mark">
+                                    Usar cadastro
+                                </span>
+                            </button>
+                        {% endfor %}
+
+                        <div
+                            id="agendaPacienteSemResultado"
+                            class="agenda-patient-empty"
+                        >
+                            Nenhum paciente cadastrado encontrado.
+                            Você pode continuar digitando normalmente.
+                        </div>
+                    </div>
+
+                    <small
+                        id="agendaPacienteSelecionado"
+                        class="agenda-patient-selected"
+                    ></small>
+                </div>
+
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input
+                        type="tel"
+                        name="telefone"
+                        id="agendaPacienteTelefone"
+                        placeholder="Opcional"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Título</label>
+                    <input
+                        type="text"
+                        name="titulo"
+                        id="agendaTitulo"
+                        value="Consulta"
+                        list="procedimentosAgenda"
+                        placeholder="Consulta, retorno, restauração..."
+                        autocomplete="off"
+                        required
+                    >
+
+                    <datalist id="procedimentosAgenda">
+                        <option value="Limpeza"></option>
+                        <option value="Restauração"></option>
+                        <option value="Manutenção"></option>
+                        <option value="Implante"></option>
+                        <option value="Extração"></option>
+                        <option value="Canal"></option>
+                        <option value="Prótese"></option>
+                        <option value="Ortodontia"></option>
+                        <option value="Avaliação"></option>
+                        <option value="Retorno"></option>
+                        <option value="Consulta"></option>
+                    </datalist>
+                </div>
+
+                <div class="form-group">
+                    <label>Data</label>
+                    <input
+                        type="date"
+                        name="data"
+                        id="agendaData"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Início</label>
+
+                    <div class="time-select-group">
+                        <select
+                            name="hora_inicio_h"
+                            id="agendaInicioHora"
+                            required
+                        >
+                            <option value="">-- h</option>
+                            {% for hora in range(9, 19) %}
+                                <option value="{{ '%02d'|format(hora) }}">
+                                    {{ '%02d'|format(hora) }} h
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <span>:</span>
+
+                        <select
+                            name="hora_inicio_m"
+                            id="agendaInicioMinuto"
+                            required
+                        >
+                            <option value="">-- min</option>
+                            <option value="00">00 min</option>
+                            <option value="30">30 min</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Fim</label>
+
+                    <div class="time-select-group">
+                        <select
+                            name="hora_fim_h"
+                            id="agendaFimHora"
+                            required
+                        >
+                            <option value="">-- h</option>
+                            {% for hora in range(9, 20) %}
+                                <option value="{{ '%02d'|format(hora) }}">
+                                    {{ '%02d'|format(hora) }} h
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <span>:</span>
+
+                        <select
+                            name="hora_fim_m"
+                            id="agendaFimMinuto"
+                            required
+                        >
+                            <option value="">-- min</option>
+                            <option value="00">00 min</option>
+                            <option value="30">30 min</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group full">
+                    <label>Observação</label>
+                    <textarea
+                        name="observacao"
+                        rows="3"
+                        placeholder="Observação opcional..."
+                    ></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <label>Cor do agendamento <small>(opcional)</small></label>
+
+                    {% set procedimentos_cores = [
+                        ("sem-cor", "Sem cor"),
+                        ("limpeza", "Limpeza"),
+                        ("restauracao", "Restauração"),
+                        ("manutencao", "Manutenção"),
+                        ("implante", "Implante"),
+                        ("extracao", "Extração"),
+                        ("canal", "Canal"),
+                        ("protese", "Prótese"),
+                        ("ortodontia", "Ortodontia"),
+                        ("avaliacao", "Avaliação"),
+                        ("retorno", "Retorno")
+                    ] %}
+
+                    <div class="agenda-color-picker agenda-procedure-picker">
+                        {% for cor, procedimento in procedimentos_cores %}
+                            <label
+                                class="agenda-procedure-option"
+                                title="{{ procedimento }}"
+                            >
+                                <input
+                                    type="radio"
+                                    name="cor"
+                                    value="{{ cor }}"
+                                    data-procedimento="{{ procedimento }}"
+                                    {% if cor == "sem-cor" %}checked{% endif %}
+                                >
+                                <span class="procedure-swatch pc-{{ cor }}"></span>
+                                <small>{{ procedimento }}</small>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button
+                    type="button"
+                    class="button secondary-button"
+                    onclick="fecharModal('novoEventoModal')"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="button primary"
+                >
+                    Salvar agendamento
+                </button>
+            </div>
+        </form>
+    </section>
+</div>
+
+
+<!-- DETALHES -->
+<div
+    class="agenda-modal-backdrop"
+    id="eventoModal"
+    onclick="fecharModalFundo(event, 'eventoModal')"
+>
+    <section class="agenda-modal event-details-modal">
+        <div class="agenda-modal-header">
+            <div>
+                <span class="modal-kicker">Agendamento</span>
+                <h2 id="eventoNome">-</h2>
+            </div>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="fecharModal('eventoModal')"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="event-detail-grid">
+            <div>
+                <span>Título</span>
+                <strong id="eventoTitulo">-</strong>
+            </div>
+
+            <div>
+                <span>Data</span>
+                <strong id="eventoData">-</strong>
+            </div>
+
+            <div>
+                <span>Horário</span>
+                <strong id="eventoHorario">-</strong>
+            </div>
+
+            <div>
+                <span>Telefone</span>
+                <strong id="eventoTelefone">-</strong>
+            </div>
+
+            <div class="full">
+                <span>Observação</span>
+                <p id="eventoObservacao">-</p>
+            </div>
+        </div>
+
+        <div class="event-status-actions">
+            <a
+                href="#"
+                id="botaoWhatsAppAgenda"
+                class="small-button whatsapp-button"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="display: none;"
+            >
+                 WhatsApp
+            </a>
+            <form method="POST" id="formConfirmar">
+                <button class="small-button confirm" type="submit">
+                    ✓ Confirmar
+                </button>
+            </form>
+
+            <form method="POST" id="formConcluir">
+                <button class="small-button" type="submit">
+                    Concluir
+                </button>
+            </form>
+
+            <form method="POST" id="formCancelar">
+                <button class="small-button cancel" type="submit">
+                    Cancelar
+                </button>
+            </form>
+
+            <form
+                method="POST"
+                id="formExcluirEvento"
+                onsubmit="return confirm('Excluir este agendamento?');"
+            >
+                <button class="delete-button" type="submit">
+                    ️ Excluir
+                </button>
+            </form>
+        </div>
+    </section>
+</div>
+
+
+<script>
+document.querySelectorAll(".calendar-event").forEach(function (evento) {
+    evento.style.top = evento.dataset.top + "px";
+    evento.style.height = evento.dataset.height + "px";
+});
+
+
+
+function somar30Minutos(hora) {
+    const partes = hora.split(":").map(Number);
+    let minutos = partes[0] * 60 + partes[1] + 30;
+
+    const h = Math.floor(minutos / 60);
+    const m = minutos % 60;
+
+    return String(h).padStart(2, "0")
+        + ":"
+        + String(m).padStart(2, "0");
+}
+
+function abrirNovoEvento(data = "", horario = "") {
+    const modal = document.getElementById("novoEventoModal");
+
+    if (data) {
+        document.getElementById("agendaData").value = data;
+    }
+
+    if (horario) {
+        const inicio = horario.split(":");
+        const fim = somar30Minutos(horario).split(":");
+
+        document.getElementById("agendaInicioHora").value =
+            inicio[0];
+
+        document.getElementById("agendaInicioMinuto").value =
+            inicio[1];
+
+        document.getElementById("agendaFimHora").value =
+            fim[0];
+
+        document.getElementById("agendaFimMinuto").value =
+            fim[1];
+    }
+
+    modal.classList.add("open");
+}
+
+
+
+function fecharModal(id) {
+    document.getElementById(id).classList.remove("open");
+}
+
+function fecharModalFundo(evento, id) {
+    if (evento.target.id === id) {
+        fecharModal(id);
+    }
+}
+
+document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+        document.querySelectorAll(
+            ".agenda-modal-backdrop.open"
+        ).forEach(function (modal) {
+            modal.classList.remove("open");
+        });
+    }
+});
+</script>
+<script>
+function abrirEvento(elemento) {
+    const id = elemento.dataset.id;
+
+    const nome =
+        elemento.dataset.nome || "";
+
+    const telefoneOriginal =
+        elemento.dataset.telefone || "";
+
+    const titulo =
+        elemento.dataset.titulo || "Consulta";
+
+    const data =
+        elemento.dataset.data || "";
+
+    const inicio =
+        elemento.dataset.inicio || "";
+
+    const fim =
+        elemento.dataset.fim || "";
+
+    const observacao =
+        elemento.dataset.observacao || "";
+
+    /* ================================
+       PREENCHE O MODAL
+    ================================= */
+
+    document.getElementById(
+        "eventoNome"
+    ).textContent =
+        nome || "-";
+
+    document.getElementById(
+        "eventoTitulo"
+    ).textContent =
+        titulo || "-";
+
+    document.getElementById(
+        "eventoData"
+    ).textContent =
+        data || "-";
+
+    document.getElementById(
+        "eventoHorario"
+    ).textContent =
+        inicio + " — " + fim;
+
+    document.getElementById(
+        "eventoTelefone"
+    ).textContent =
+        telefoneOriginal || "-";
+
+    document.getElementById(
+        "eventoObservacao"
+    ).textContent =
+        observacao || "-";
+
+
+    /* ================================
+       STATUS
+    ================================= */
+
+    document.getElementById(
+        "formConfirmar"
+    ).action =
+        "/agenda/evento/"
+        + id
+        + "/status/Confirmado";
+
+    document.getElementById(
+        "formConcluir"
+    ).action =
+        "/agenda/evento/"
+        + id
+        + "/status/Concluído";
+
+    document.getElementById(
+        "formCancelar"
+    ).action =
+        "/agenda/evento/"
+        + id
+        + "/status/Cancelado";
+
+    document.getElementById(
+        "formExcluirEvento"
+    ).action =
+        "/agenda/evento/"
+        + id
+        + "/excluir";
+
+
+    /* ================================
+       WHATSAPP
+    ================================= */
+
+    const botaoWhatsApp =
+        document.getElementById(
+            "botaoWhatsAppAgenda"
+        );
+
+    let telefone =
+        telefoneOriginal.replace(
+            /\D/g,
+            ""
+        );
+
+    if (telefone) {
+
+        /*
+        Se o telefone não começar com 55,
+        adiciona o código do Brasil.
+        */
+        if (!telefone.startsWith("55")) {
+            telefone =
+                "55" + telefone;
+        }
+
+
+        /* ============================
+           FORMATA DATA
+        ============================ */
+
+        let dataFormatada = data;
+
+        if (
+            data &&
+            data.includes("-")
+        ) {
+            const partes =
+                data.split("-");
+
+            if (partes.length === 3) {
+                dataFormatada =
+                    partes[2]
+                    + "/"
+                    + partes[1]
+                    + "/"
+                    + partes[0];
+            }
+        }
+
+
+        /* ============================
+           MENSAGEM
+        ============================ */
+
+        const mensagem =
+            "Olá, "
+            + nome
+            + "! Tudo bem?\n\n"
+            + "Somos da clínica odontológica e gostaríamos "
+            + "de confirmar seu agendamento.\n\n"
+            + " "
+            + titulo
+            + "\n"
+            + " Data: "
+            + dataFormatada
+            + "\n"
+            + " Horário: "
+            + inicio
+            + " às "
+            + fim
+            + "\n\n"
+            + "Por favor, responda:\n\n"
+            + "SIM - para confirmar\n"
+            + "NÃO - para cancelar\n\n"
+            + "Se precisar alterar o horário, "
+            + "entre em contato conosco.";
+
+
+        /* ============================
+           LINK DIRETO WHATSAPP
+        ============================ */
+
+        const linkWhatsApp =
+            "https://wa.me/"
+            + telefone
+            + "?text="
+            + encodeURIComponent(
+                mensagem
+            );
+
+        botaoWhatsApp.href =
+            linkWhatsApp;
+
+        botaoWhatsApp.style.display =
+            "inline-flex";
+
+    } else {
+
+        botaoWhatsApp.href = "#";
+
+        botaoWhatsApp.style.display =
+            "none";
+    }
+
+
+    /* ================================
+       ABRE MODAL
+    ================================= */
+
+    document.getElementById(
+        "eventoModal"
+    ).classList.add(
+        "open"
+    );
+}
+</script>
+
+
+<script id="agenda-patient-autocomplete-script">
+document.addEventListener("DOMContentLoaded", function () {
+    const campoNome = document.getElementById(
+        "agendaPacienteNome"
+    );
+    const campoTelefone = document.getElementById(
+        "agendaPacienteTelefone"
+    );
+    const sugestoes = document.getElementById(
+        "agendaPacienteSugestoes"
+    );
+    const mensagemSelecionado = document.getElementById(
+        "agendaPacienteSelecionado"
+    );
+    const semResultado = document.getElementById(
+        "agendaPacienteSemResultado"
+    );
+
+    if (!campoNome || !campoTelefone || !sugestoes) {
+        return;
+    }
+
+    const opcoes = Array.from(
+        sugestoes.querySelectorAll(
+            ".agenda-patient-option"
+        )
+    );
+
+    let nomeSelecionado = "";
+
+    function normalizar(texto) {
+        return String(texto || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .trim();
+    }
+
+    function apenasNumeros(texto) {
+        return String(texto || "")
+            .replace(/\D/g, "");
+    }
+
+    function fecharSugestoes() {
+        sugestoes.classList.remove("open");
+    }
+
+    function limparIndicacaoSelecionado() {
+        nomeSelecionado = "";
+        mensagemSelecionado.textContent = "";
+        mensagemSelecionado.classList.remove("visible");
+    }
+
+    function filtrarPacientes() {
+        const termo = normalizar(campoNome.value);
+        const termoNumerico = apenasNumeros(campoNome.value);
+
+        if (!termo) {
+            opcoes.forEach(function (opcao) {
+                opcao.style.display = "none";
+            });
+
+            if (semResultado) {
+                semResultado.classList.remove("visible");
+            }
+
+            fecharSugestoes();
+            return;
+        }
+
+        let encontrados = 0;
+
+        opcoes.forEach(function (opcao) {
+            const nome = normalizar(
+                opcao.dataset.nome
+            );
+            const telefoneTexto = normalizar(
+                opcao.dataset.telefone
+            );
+            const telefoneNumeros = apenasNumeros(
+                opcao.dataset.telefone
+            );
+
+            const bateNome = nome.includes(termo);
+            const bateTelefoneTexto =
+                telefoneTexto.includes(termo);
+            const bateTelefoneNumeros =
+                termoNumerico.length >= 3
+                && telefoneNumeros.includes(termoNumerico);
+
+            const mostrar =
+                bateNome
+                || bateTelefoneTexto
+                || bateTelefoneNumeros;
+
+            opcao.style.display = mostrar
+                ? "flex"
+                : "none";
+
+            if (mostrar) {
+                encontrados += 1;
+            }
+        });
+
+        if (semResultado) {
+            semResultado.classList.toggle(
+                "visible",
+                encontrados === 0
+            );
+        }
+
+        sugestoes.classList.add("open");
+    }
+
+    campoNome.addEventListener("input", function () {
+        if (
+            nomeSelecionado
+            && campoNome.value !== nomeSelecionado
+        ) {
+            limparIndicacaoSelecionado();
+        }
+
+        filtrarPacientes();
+    });
+
+    campoNome.addEventListener("focus", function () {
+        if (campoNome.value.trim()) {
+            filtrarPacientes();
+        }
+    });
+
+    opcoes.forEach(function (opcao) {
+        opcao.addEventListener("click", function () {
+            const nome = opcao.dataset.nome || "";
+            const telefone = opcao.dataset.telefone || "";
+
+            campoNome.value = nome;
+            campoTelefone.value = telefone;
+            nomeSelecionado = nome;
+
+            mensagemSelecionado.textContent =
+                "✓ Paciente cadastrado selecionado. "
+                + "Telefone preenchido automaticamente.";
+            mensagemSelecionado.classList.add("visible");
+
+            fecharSugestoes();
+            campoTelefone.focus();
+        });
+    });
+
+    document.addEventListener("click", function (evento) {
+        if (
+            evento.target !== campoNome
+            && !sugestoes.contains(evento.target)
+        ) {
+            fecharSugestoes();
+        }
+    });
+
+    campoNome.addEventListener("keydown", function (evento) {
+        if (evento.key === "Escape") {
+            fecharSugestoes();
+        }
+    });
+
+    const formulario = campoNome.closest("form");
+
+    if (formulario) {
+        formulario.addEventListener("reset", function () {
+            limparIndicacaoSelecionado();
+            fecharSugestoes();
+        });
+    }
+});
+</script>
+
+</body>
+</html>

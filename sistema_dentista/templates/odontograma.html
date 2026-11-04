@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Odontograma</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='visual_modern.css', v=6) }}"
+    >
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+
+<style id="paleta-clinica-sincronizada">
+:root {
+    --pc-limpeza-bg: #f3f4f6;
+    --pc-limpeza-main: #cbd5e1;
+    --pc-limpeza-text: #475569;
+
+    --pc-restauracao-bg: #dbeafe;
+    --pc-restauracao-main: #3b82f6;
+    --pc-restauracao-text: #1d4ed8;
+
+    --pc-manutencao-bg: #dcfce7;
+    --pc-manutencao-main: #22c55e;
+    --pc-manutencao-text: #166534;
+
+    --pc-implante-bg: #ede9fe;
+    --pc-implante-main: #8b5cf6;
+    --pc-implante-text: #5b21b6;
+
+    --pc-carie-bg: #fee2e2;
+    --pc-carie-main: #ef4444;
+    --pc-carie-text: #991b1b;
+
+    --pc-ausente-bg: #4b5563;
+    --pc-ausente-main: #374151;
+    --pc-ausente-text: #ffffff;
+
+    --pc-extracao-bg: #fef3c7;
+    --pc-extracao-main: #eab308;
+    --pc-extracao-text: #854d0e;
+
+    --pc-canal-bg: #dbe4f0;
+    --pc-canal-main: #1e3a8a;
+    --pc-canal-text: #172554;
+
+    --pc-protese-bg: #fce7f3;
+    --pc-protese-main: #ec4899;
+    --pc-protese-text: #9d174d;
+
+    --pc-fraturado-bg: #ffedd5;
+    --pc-fraturado-main: #f97316;
+    --pc-fraturado-text: #9a3412;
+}
+
+/* Legenda compartilhada */
+.procedure-color-legend {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border: 1px solid #e3e7ed;
+    border-radius: 11px;
+    background: #fff;
+}
+
+.procedure-color-legend > strong {
+    display: block;
+    margin-bottom: 9px;
+    color: #475467;
+    font-size: 12px;
+}
+
+.procedure-color-legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 15px;
+}
+
+.procedure-color-legend-items span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #475467;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.procedure-color-dot {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, .12);
+}
+
+.pc-limpeza { background: var(--pc-limpeza-main) !important; }
+.pc-restauracao { background: var(--pc-restauracao-main) !important; }
+.pc-manutencao { background: var(--pc-manutencao-main) !important; }
+.pc-implante { background: var(--pc-implante-main) !important; }
+.pc-carie { background: var(--pc-carie-main) !important; }
+.pc-ausente { background: var(--pc-ausente-main) !important; }
+.pc-extracao { background: var(--pc-extracao-main) !important; }
+.pc-canal { background: var(--pc-canal-main) !important; }
+.pc-protese { background: var(--pc-protese-main) !important; }
+.pc-fraturado { background: var(--pc-fraturado-main) !important; }
+
+/* Agenda */
+.event-limpeza {
+    background: var(--pc-limpeza-bg) !important;
+    color: var(--pc-limpeza-text) !important;
+    border-left: 4px solid var(--pc-limpeza-main) !important;
+}
+.event-restauracao {
+    background: var(--pc-restauracao-bg) !important;
+    color: var(--pc-restauracao-text) !important;
+    border-left: 4px solid var(--pc-restauracao-main) !important;
+}
+.event-manutencao {
+    background: var(--pc-manutencao-bg) !important;
+    color: var(--pc-manutencao-text) !important;
+    border-left: 4px solid var(--pc-manutencao-main) !important;
+}
+.event-implante {
+    background: var(--pc-implante-bg) !important;
+    color: var(--pc-implante-text) !important;
+    border-left: 4px solid var(--pc-implante-main) !important;
+}
+.event-carie {
+    background: var(--pc-carie-bg) !important;
+    color: var(--pc-carie-text) !important;
+    border-left: 4px solid var(--pc-carie-main) !important;
+}
+.event-ausente {
+    background: var(--pc-ausente-bg) !important;
+    color: var(--pc-ausente-text) !important;
+    border-left: 4px solid var(--pc-ausente-main) !important;
+}
+.event-extracao {
+    background: var(--pc-extracao-bg) !important;
+    color: var(--pc-extracao-text) !important;
+    border-left: 4px solid var(--pc-extracao-main) !important;
+}
+.event-canal {
+    background: var(--pc-canal-bg) !important;
+    color: var(--pc-canal-text) !important;
+    border-left: 4px solid var(--pc-canal-main) !important;
+}
+.event-protese {
+    background: var(--pc-protese-bg) !important;
+    color: var(--pc-protese-text) !important;
+    border-left: 4px solid var(--pc-protese-main) !important;
+}
+.event-fraturado {
+    background: var(--pc-fraturado-bg) !important;
+    color: var(--pc-fraturado-text) !important;
+    border-left: 4px solid var(--pc-fraturado-main) !important;
+}
+
+.agenda-procedure-picker {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+}
+
+.agenda-procedure-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid #e0e4ea;
+    border-radius: 9px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.agenda-procedure-option:hover {
+    background: #f8fafc;
+}
+
+.agenda-procedure-option input {
+    position: absolute;
+    opacity: 0;
+}
+
+.agenda-procedure-option .procedure-swatch {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+    border-radius: 50%;
+    border: 2px solid rgba(0,0,0,.10);
+}
+
+.agenda-procedure-option small {
+    color: #344054;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.agenda-procedure-option input:checked + .procedure-swatch {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #344054;
+}
+
+/* Odontograma: dentes e faces */
+.state-dot.estado-limpeza,
+.odonto-q-face.estado-limpeza {
+    background: var(--pc-limpeza-bg) !important;
+    border-color: var(--pc-limpeza-main) !important;
+    color: var(--pc-limpeza-text) !important;
+}
+.odonto-q-tooth.estado-limpeza .odonto-q-outline {
+    fill: var(--pc-limpeza-bg) !important;
+    stroke: var(--pc-limpeza-main) !important;
+}
+
+.state-dot.estado-restauracao,
+.odonto-q-face.estado-restauracao {
+    background: var(--pc-restauracao-bg) !important;
+    border-color: var(--pc-restauracao-main) !important;
+    color: var(--pc-restauracao-text) !important;
+}
+.odonto-q-tooth.estado-restauracao .odonto-q-outline {
+    fill: var(--pc-restauracao-bg) !important;
+    stroke: var(--pc-restauracao-main) !important;
+}
+
+.state-dot.estado-manutencao,
+.odonto-q-face.estado-manutencao {
+    background: var(--pc-manutencao-bg) !important;
+    border-color: var(--pc-manutencao-main) !important;
+    color: var(--pc-manutencao-text) !important;
+}
+.odonto-q-tooth.estado-manutencao .odonto-q-outline {
+    fill: var(--pc-manutencao-bg) !important;
+    stroke: var(--pc-manutencao-main) !important;
+}
+
+.state-dot.estado-implante,
+.odonto-q-face.estado-implante {
+    background: var(--pc-implante-bg) !important;
+    border-color: var(--pc-implante-main) !important;
+    color: var(--pc-implante-text) !important;
+}
+.odonto-q-tooth.estado-implante .odonto-q-outline {
+    fill: var(--pc-implante-bg) !important;
+    stroke: var(--pc-implante-main) !important;
+}
+
+.state-dot.estado-carie,
+.odonto-q-face.estado-carie {
+    background: var(--pc-carie-bg) !important;
+    border-color: var(--pc-carie-main) !important;
+    color: var(--pc-carie-text) !important;
+}
+.odonto-q-tooth.estado-carie .odonto-q-outline {
+    fill: var(--pc-carie-bg) !important;
+    stroke: var(--pc-carie-main) !important;
+}
+
+.state-dot.estado-ausente,
+.odonto-q-face.estado-ausente {
+    background: var(--pc-ausente-bg) !important;
+    border-color: var(--pc-ausente-main) !important;
+    color: var(--pc-ausente-text) !important;
+}
+.odonto-q-tooth.estado-ausente .odonto-q-outline {
+    fill: var(--pc-ausente-bg) !important;
+    stroke: var(--pc-ausente-main) !important;
+    opacity: .82 !important;
+}
+
+.state-dot.estado-extracao,
+.odonto-q-face.estado-extracao {
+    background: var(--pc-extracao-bg) !important;
+    border-color: var(--pc-extracao-main) !important;
+    color: var(--pc-extracao-text) !important;
+}
+.odonto-q-tooth.estado-extracao .odonto-q-outline {
+    fill: var(--pc-extracao-bg) !important;
+    stroke: var(--pc-extracao-main) !important;
+}
+
+.state-dot.estado-canal,
+.odonto-q-face.estado-canal {
+    background: var(--pc-canal-bg) !important;
+    border-color: var(--pc-canal-main) !important;
+    color: var(--pc-canal-text) !important;
+}
+.odonto-q-tooth.estado-canal .odonto-q-outline {
+    fill: var(--pc-canal-bg) !important;
+    stroke: var(--pc-canal-main) !important;
+}
+
+.state-dot.estado-protese,
+.odonto-q-face.estado-protese {
+    background: var(--pc-protese-bg) !important;
+    border-color: var(--pc-protese-main) !important;
+    color: var(--pc-protese-text) !important;
+}
+.odonto-q-tooth.estado-protese .odonto-q-outline {
+    fill: var(--pc-protese-bg) !important;
+    stroke: var(--pc-protese-main) !important;
+}
+
+.state-dot.estado-fraturado,
+.odonto-q-face.estado-fraturado {
+    background: var(--pc-fraturado-bg) !important;
+    border-color: var(--pc-fraturado-main) !important;
+    color: var(--pc-fraturado-text) !important;
+}
+.odonto-q-tooth.estado-fraturado .odonto-q-outline {
+    fill: var(--pc-fraturado-bg) !important;
+    stroke: var(--pc-fraturado-main) !important;
+}
+
+/* Compatibilidade visual com nomes antigos ainda existentes */
+.state-dot.estado-restaurado,
+.odonto-q-face.estado-restaurado {
+    background: var(--pc-restauracao-bg) !important;
+    border-color: var(--pc-restauracao-main) !important;
+}
+.odonto-q-tooth.estado-restaurado .odonto-q-outline {
+    fill: var(--pc-restauracao-bg) !important;
+    stroke: var(--pc-restauracao-main) !important;
+}
+
+.state-dot.estado-extracao-indicada,
+.odonto-q-face.estado-extracao-indicada {
+    background: var(--pc-extracao-bg) !important;
+    border-color: var(--pc-extracao-main) !important;
+}
+.odonto-q-tooth.estado-extracao-indicada .odonto-q-outline {
+    fill: var(--pc-extracao-bg) !important;
+    stroke: var(--pc-extracao-main) !important;
+}
+
+@media (max-width: 720px) {
+    .agenda-procedure-picker {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+
+<style id="dente-inteiro-como-face-style">
+.whole-tooth-face-hint {
+    margin: 12px 0 14px;
+    padding: 10px 11px;
+    border: 1px solid #dbe3ec;
+    border-radius: 9px;
+    background: #f8fafc;
+}
+
+.whole-tooth-face-hint strong,
+.whole-tooth-face-hint span {
+    display: block;
+}
+
+.whole-tooth-face-hint strong {
+    color: #344054;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.whole-tooth-face-hint span {
+    color: #667085;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+/*
+Quando o desenho anatômico é selecionado,
+a borda deixa mais claro que "Dente inteiro" está ativo.
+*/
+.odonto-q-tooth.selected {
+    outline: 3px solid rgba(37, 99, 235, .22);
+    outline-offset: 3px;
+    border-radius: 8px;
+}
+</style>
+
+
+<style id="inverter-v-l-arcada-inferior">
+/* Somente na arcada inferior: Lingual fica em cima e Vestibular embaixo. */
+.odonto-q-fivefaces.lower .face-lingual-palatina {
+    top: 0 !important;
+    bottom: auto !important;
+    border-radius: 9px 9px 0 0 !important;
+}
+
+.odonto-q-fivefaces.lower .face-vestibular {
+    top: auto !important;
+    bottom: 0 !important;
+    border-radius: 0 0 9px 9px !important;
+}
+</style>
+
+
+<style id="md-direito-invertido">
+
+.odontogram-region.q1 .odonto-q-fivefaces .face-mesial,
+.odontogram-region.q4 .odonto-q-fivefaces .face-mesial {
+    left: auto !important;
+    right: 0 !important;
+    border-radius: 0 9px 9px 0 !important;
+}
+
+.odontogram-region.q1 .odonto-q-fivefaces .face-distal,
+.odontogram-region.q4 .odonto-q-fivefaces .face-distal {
+    left: 0 !important;
+    right: auto !important;
+    border-radius: 9px 0 0 9px !important;
+}
+</style>
+
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">Dr. Tiago J. Lima</div>
+
+    <nav>
+        <a href="/">Dashboard</a>
+        <a href="/agenda">Agenda</a>
+        <a href="/pacientes" class="active">Pacientes</a>
+        <a href="/financeiro">Financeiro</a>
+    </nav>
+</header>
+
+<main class="container odontogram-quadrant-page">
+
+    <div class="page-header">
+        <div>
+            <a
+                href="{{ url_for('perfil_paciente', paciente_id=paciente['id']) }}"
+                class="back-link"
+            >
+                ← Voltar ao perfil
+            </a>
+
+            <h1>Odontograma</h1>
+            <p>
+                Paciente:
+                <strong>{{ paciente["nome"] }}</strong>
+            </p>
+        </div>
+    </div>
+
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria, mensagem in mensagens %}
+            <div class="alert {{ categoria }}">
+                {{ mensagem }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <section class="odontogram-quadrant-card">
+        <div class="odontogram-quadrant-tabs">
+            <button
+                type="button"
+                class="odontogram-quadrant-tab active"
+                onclick="trocarDenticao('permanentes', this)"
+            >
+                Permanentes
+            </button>
+
+            <button
+                type="button"
+                class="odontogram-quadrant-tab"
+                onclick="trocarDenticao('deciduos', this)"
+            >
+                Decíduos
+            </button>
+        </div>
+
+
+        <section class="procedure-color-legend">
+        <strong>Legenda dos procedimentos / condições</strong>
+        <div class="procedure-color-legend-items">
+            <span><i class="procedure-color-dot pc-limpeza"></i>Limpeza</span>
+            <span><i class="procedure-color-dot pc-restauracao"></i>Restauração</span>
+            <span><i class="procedure-color-dot pc-manutencao"></i>Manutenção</span>
+            <span><i class="procedure-color-dot pc-implante"></i>Implante</span>
+            <span><i class="procedure-color-dot pc-carie"></i>Cárie</span>
+            <span><i class="procedure-color-dot pc-ausente"></i>Ausente</span>
+            <span><i class="procedure-color-dot pc-extracao"></i>Extração</span>
+            <span><i class="procedure-color-dot pc-canal"></i>Canal</span>
+            <span><i class="procedure-color-dot pc-protese"></i>Prótese</span>
+            <span><i class="procedure-color-dot pc-fraturado"></i>Fraturado</span>
+        </div>
+    </section>
+
+        <div class="odontogram-quadrant-layout">
+
+            <div class="odontogram-quadrant-board">
+                <div
+                    id="permanentes"
+                    class="odontogram-quadrant-dentition active"
+                >
+
+                    <div class="odontogram-grid-2x2">
+
+                        <!-- QUADRANTE 1 -->
+                        <section class="odontogram-region q1">
+                            <div class="odontogram-region-label">
+                                Superior direito
+                            </div>
+
+                            <div class="odontogram-region-numbers">
+                                {% for dente in dentes_superiores_esquerda %}
+                                    <span>{{ dente }}</span>
+                                {% endfor %}
+                            </div>
+
+                            <div class="odontogram-region-row">
+                                {% for dente in dentes_superiores_esquerda %}
+                                    {% set dados = odontograma.get(dente|string) %}
+                                    <div class="odontogram-region-cell">
+                                        <button
+                                            type="button"
+                                            id="dente-{{ dente }}"
+                                            class="odonto-q-tooth
+                                            {% if dados %}
+                                                estado-{{ dados['estado']|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                            {% endif %}
+                                            "
+                                            onclick="selecionarDente('{{ dente }}')"
+                                        >
+                                            <svg viewBox="0 0 54 88" class="odonto-q-tooth-svg">
+                                                {% if dente in [18,17,16] %}
+                                                    <path d="M10 18 Q10 7 18 7 Q23 2 27 8 Q32 2 37 7 Q45 7 44 19 L41 43 Q40 53 36 60 L34 80 Q32 86 29 80 L27 62 L24 80 Q21 86 19 80 L17 60 Q13 52 12 43 Z" class="odonto-q-outline"/>
+                                                {% elif dente in [15,14] %}
+                                                    <path d="M13 18 Q13 8 22 8 Q27 4 32 8 Q41 8 41 18 L39 43 Q38 52 33 59 L31 80 Q29 86 27 80 L25 61 L22 80 Q20 85 18 80 L17 59 Q14 51 14 43 Z" class="odonto-q-outline"/>
+                                                {% elif dente == 13 %}
+                                                    <path d="M18 18 Q20 7 27 4 Q34 7 36 18 L35 44 Q33 55 30 61 L29 82 Q27 87 25 82 L24 61 Q20 54 19 44 Z" class="odonto-q-outline"/>
+                                                {% else %}
+                                                    <path d="M18 18 Q18 8 27 8 Q36 8 36 18 L35 44 Q33 54 30 60 L29 82 Q27 87 25 82 L24 60 Q20 54 19 44 Z" class="odonto-q-outline"/>
+                                                {% endif %}
+                                                <path d="M13 25 Q27 31 41 25" class="odonto-q-detail"/>
+                                            </svg>
+                                        </button>
+
+                                        <div class="odonto-q-fivefaces">
+                                            {% for face, letra in [
+                                                ("Mesial", "M"),
+                                                ("Vestibular", "V"),
+                                                ("Oclusal/Incisal", "O"),
+                                                ("Lingual/Palatina", "L"),
+                                                ("Distal", "D")
+                                            ] %}
+                                                {% set chave = (dente|string) ~ "|" ~ face %}
+                                                {% set estado_face = faces.get(chave) %}
+                                                <button
+                                                    type="button"
+                                                    class="odonto-q-face
+                                                    face-{{ face|lower|replace('/','-')|replace(' ','-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% if estado_face %}
+                                                        estado-{{ estado_face|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% endif %}
+                                                    "
+                                                    data-dente="{{ dente }}"
+                                                    data-face="{{ face }}"
+                                                    onclick="selecionarFace('{{ dente }}', '{{ face }}', this)"
+                                                >
+                                                    {{ letra }}
+                                                </button>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+
+                        <!-- QUADRANTE 2 -->
+                        <section class="odontogram-region q2">
+                            <div class="odontogram-region-label">
+                                Superior esquerdo
+                            </div>
+
+                            <div class="odontogram-region-numbers">
+                                {% for dente in dentes_superiores_direita %}
+                                    <span>{{ dente }}</span>
+                                {% endfor %}
+                            </div>
+
+                            <div class="odontogram-region-row">
+                                {% for dente in dentes_superiores_direita %}
+                                    {% set dados = odontograma.get(dente|string) %}
+                                    <div class="odontogram-region-cell">
+                                        <button
+                                            type="button"
+                                            id="dente-{{ dente }}"
+                                            class="odonto-q-tooth
+                                            {% if dados %}
+                                                estado-{{ dados['estado']|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                            {% endif %}
+                                            "
+                                            onclick="selecionarDente('{{ dente }}')"
+                                        >
+                                            <svg viewBox="0 0 54 88" class="odonto-q-tooth-svg">
+                                                {% if dente in [26,27,28] %}
+                                                    <path d="M10 18 Q10 7 18 7 Q23 2 27 8 Q32 2 37 7 Q45 7 44 19 L41 43 Q40 53 36 60 L34 80 Q32 86 29 80 L27 62 L24 80 Q21 86 19 80 L17 60 Q13 52 12 43 Z" class="odonto-q-outline"/>
+                                                {% elif dente in [24,25] %}
+                                                    <path d="M13 18 Q13 8 22 8 Q27 4 32 8 Q41 8 41 18 L39 43 Q38 52 33 59 L31 80 Q29 86 27 80 L25 61 L22 80 Q20 85 18 80 L17 59 Q14 51 14 43 Z" class="odonto-q-outline"/>
+                                                {% elif dente == 23 %}
+                                                    <path d="M18 18 Q20 7 27 4 Q34 7 36 18 L35 44 Q33 55 30 61 L29 82 Q27 87 25 82 L24 61 Q20 54 19 44 Z" class="odonto-q-outline"/>
+                                                {% else %}
+                                                    <path d="M18 18 Q18 8 27 8 Q36 8 36 18 L35 44 Q33 54 30 60 L29 82 Q27 87 25 82 L24 60 Q20 54 19 44 Z" class="odonto-q-outline"/>
+                                                {% endif %}
+                                                <path d="M13 25 Q27 31 41 25" class="odonto-q-detail"/>
+                                            </svg>
+                                        </button>
+
+                                        <div class="odonto-q-fivefaces">
+                                            {% for face, letra in [
+                                                ("Mesial", "M"),
+                                                ("Vestibular", "V"),
+                                                ("Oclusal/Incisal", "O"),
+                                                ("Lingual/Palatina", "L"),
+                                                ("Distal", "D")
+                                            ] %}
+                                                {% set chave = (dente|string) ~ "|" ~ face %}
+                                                {% set estado_face = faces.get(chave) %}
+                                                <button
+                                                    type="button"
+                                                    class="odonto-q-face
+                                                    face-{{ face|lower|replace('/','-')|replace(' ','-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% if estado_face %}
+                                                        estado-{{ estado_face|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% endif %}
+                                                    "
+                                                    data-dente="{{ dente }}"
+                                                    data-face="{{ face }}"
+                                                    onclick="selecionarFace('{{ dente }}', '{{ face }}', this)"
+                                                >
+                                                    {{ letra }}
+                                                </button>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+
+                        <!-- QUADRANTE 4 -->
+                        <section class="odontogram-region q4">
+                            <div class="odontogram-region-label">
+                                Inferior direito
+                            </div>
+
+                            <div class="odontogram-region-row lower">
+                                {% for dente in dentes_inferiores_esquerda %}
+                                    {% set dados = odontograma.get(dente|string) %}
+                                    <div class="odontogram-region-cell">
+                                        <div class="odonto-q-fivefaces lower">
+                                            {% for face, letra in [
+                                                ("Mesial", "M"),
+                                                ("Vestibular", "V"),
+                                                ("Oclusal/Incisal", "O"),
+                                                ("Lingual/Palatina", "L"),
+                                                ("Distal", "D")
+                                            ] %}
+                                                {% set chave = (dente|string) ~ "|" ~ face %}
+                                                {% set estado_face = faces.get(chave) %}
+                                                <button
+                                                    type="button"
+                                                    class="odonto-q-face
+                                                    face-{{ face|lower|replace('/','-')|replace(' ','-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% if estado_face %}
+                                                        estado-{{ estado_face|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% endif %}
+                                                    "
+                                                    data-dente="{{ dente }}"
+                                                    data-face="{{ face }}"
+                                                    onclick="selecionarFace('{{ dente }}', '{{ face }}', this)"
+                                                >
+                                                    {{ letra }}
+                                                </button>
+                                            {% endfor %}
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            id="dente-{{ dente }}"
+                                            class="odonto-q-tooth lower
+                                            {% if dados %}
+                                                estado-{{ dados['estado']|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                            {% endif %}
+                                            "
+                                            onclick="selecionarDente('{{ dente }}')"
+                                        >
+                                            <svg viewBox="0 0 54 88" class="odonto-q-tooth-svg">
+                                                {% if dente in [48,47,46] %}
+                                                    <path d="M10 18 Q10 7 18 7 Q23 2 27 8 Q32 2 37 7 Q45 7 44 19 L41 43 Q40 53 36 60 L34 80 Q32 86 29 80 L27 62 L24 80 Q21 86 19 80 L17 60 Q13 52 12 43 Z" class="odonto-q-outline"/>
+                                                {% elif dente in [45,44] %}
+                                                    <path d="M13 18 Q13 8 22 8 Q27 4 32 8 Q41 8 41 18 L39 43 Q38 52 33 59 L31 80 Q29 86 27 80 L25 61 L22 80 Q20 85 18 80 L17 59 Q14 51 14 43 Z" class="odonto-q-outline"/>
+                                                {% elif dente == 43 %}
+                                                    <path d="M18 18 Q20 7 27 4 Q34 7 36 18 L35 44 Q33 55 30 61 L29 82 Q27 87 25 82 L24 61 Q20 54 19 44 Z" class="odonto-q-outline"/>
+                                                {% else %}
+                                                    <path d="M18 18 Q18 8 27 8 Q36 8 36 18 L35 44 Q33 54 30 60 L29 82 Q27 87 25 82 L24 60 Q20 54 19 44 Z" class="odonto-q-outline"/>
+                                                {% endif %}
+                                                <path d="M13 25 Q27 31 41 25" class="odonto-q-detail"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="odontogram-region-numbers lower">
+                                {% for dente in dentes_inferiores_esquerda %}
+                                    <span>{{ dente }}</span>
+                                {% endfor %}
+                            </div>
+                        </section>
+
+                        <!-- QUADRANTE 3 -->
+                        <section class="odontogram-region q3">
+                            <div class="odontogram-region-label">
+                                Inferior esquerdo
+                            </div>
+
+                            <div class="odontogram-region-row lower">
+                                {% for dente in dentes_inferiores_direita %}
+                                    {% set dados = odontograma.get(dente|string) %}
+                                    <div class="odontogram-region-cell">
+                                        <div class="odonto-q-fivefaces lower">
+                                            {% for face, letra in [
+                                                ("Mesial", "M"),
+                                                ("Vestibular", "V"),
+                                                ("Oclusal/Incisal", "O"),
+                                                ("Lingual/Palatina", "L"),
+                                                ("Distal", "D")
+                                            ] %}
+                                                {% set chave = (dente|string) ~ "|" ~ face %}
+                                                {% set estado_face = faces.get(chave) %}
+                                                <button
+                                                    type="button"
+                                                    class="odonto-q-face
+                                                    face-{{ face|lower|replace('/','-')|replace(' ','-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% if estado_face %}
+                                                        estado-{{ estado_face|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% endif %}
+                                                    "
+                                                    data-dente="{{ dente }}"
+                                                    data-face="{{ face }}"
+                                                    onclick="selecionarFace('{{ dente }}', '{{ face }}', this)"
+                                                >
+                                                    {{ letra }}
+                                                </button>
+                                            {% endfor %}
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            id="dente-{{ dente }}"
+                                            class="odonto-q-tooth lower
+                                            {% if dados %}
+                                                estado-{{ dados['estado']|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                            {% endif %}
+                                            "
+                                            onclick="selecionarDente('{{ dente }}')"
+                                        >
+                                            <svg viewBox="0 0 54 88" class="odonto-q-tooth-svg">
+                                                {% if dente in [36,37,38] %}
+                                                    <path d="M10 18 Q10 7 18 7 Q23 2 27 8 Q32 2 37 7 Q45 7 44 19 L41 43 Q40 53 36 60 L34 80 Q32 86 29 80 L27 62 L24 80 Q21 86 19 80 L17 60 Q13 52 12 43 Z" class="odonto-q-outline"/>
+                                                {% elif dente in [34,35] %}
+                                                    <path d="M13 18 Q13 8 22 8 Q27 4 32 8 Q41 8 41 18 L39 43 Q38 52 33 59 L31 80 Q29 86 27 80 L25 61 L22 80 Q20 85 18 80 L17 59 Q14 51 14 43 Z" class="odonto-q-outline"/>
+                                                {% elif dente == 33 %}
+                                                    <path d="M18 18 Q20 7 27 4 Q34 7 36 18 L35 44 Q33 55 30 61 L29 82 Q27 87 25 82 L24 61 Q20 54 19 44 Z" class="odonto-q-outline"/>
+                                                {% else %}
+                                                    <path d="M18 18 Q18 8 27 8 Q36 8 36 18 L35 44 Q33 54 30 60 L29 82 Q27 87 25 82 L24 60 Q20 54 19 44 Z" class="odonto-q-outline"/>
+                                                {% endif %}
+                                                <path d="M13 25 Q27 31 41 25" class="odonto-q-detail"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="odontogram-region-numbers lower">
+                                {% for dente in dentes_inferiores_direita %}
+                                    <span>{{ dente }}</span>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <div
+                    id="deciduos"
+                    class="odontogram-quadrant-dentition"
+                >
+                    <div class="odontogram-grid-2x2 deciduous-grid">
+
+                        <section class="odontogram-region q1 deciduous-region">
+                            <div class="odontogram-region-label">
+                                Superior direito — decíduos
+                            </div>
+
+                            <div class="odontogram-region-numbers deciduous">
+                                {% for dente in dentes_deciduos_superiores[:5] %}
+                                    <span>{{ dente }}</span>
+                                {% endfor %}
+                            </div>
+
+                            <div class="odontogram-region-row deciduous">
+                                {% for dente in dentes_deciduos_superiores[:5] %}
+                                    {% set dados = odontograma.get(dente|string) %}
+                                    <div class="odontogram-region-cell">
+                                        <button
+                                            type="button"
+                                            id="dente-{{ dente }}"
+                                            class="odonto-q-tooth
+                                            {% if dados %}
+                                                estado-{{ dados['estado']|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                            {% endif %}
+                                            "
+                                            onclick="selecionarDente('{{ dente }}')"
+                                        >
+                                            <svg viewBox="0 0 54 82" class="odonto-q-tooth-svg">
+                                                <path
+                                                    d="M14 18 Q15 7 27 7 Q39 7 40 18 L38 43 Q36 53 31 60 L29 76 Q27 82 25 76 L23 60 Q18 53 16 43 Z"
+                                                    class="odonto-q-outline"
+                                                />
+                                                <path
+                                                    d="M16 25 Q27 30 38 25"
+                                                    class="odonto-q-detail"
+                                                />
+                                            </svg>
+                                        </button>
+                                        <div class="odonto-q-fivefaces">
+                                            {% for face, letra in [
+                                                ("Mesial", "M"),
+                                                ("Vestibular", "V"),
+                                                ("Oclusal/Incisal", "O"),
+                                                ("Lingual/Palatina", "L"),
+                                                ("Distal", "D")
+                                            ] %}
+                                                {% set chave = (dente|string) ~ "|" ~ face %}
+                                                {% set estado_face = faces.get(chave) %}
+                                                <button
+                                                    type="button"
+                                                    class="odonto-q-face
+                                                    face-{{ face|lower|replace('/','-')|replace(' ','-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% if estado_face %}
+                                                        estado-{{ estado_face|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% endif %}
+                                                    "
+                                                    data-dente="{{ dente }}"
+                                                    data-face="{{ face }}"
+                                                    onclick="selecionarFace('{{ dente }}', '{{ face }}', this)"
+                                                >
+                                                    {{ letra }}
+                                                </button>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+
+                        <section class="odontogram-region q2 deciduous-region">
+                            <div class="odontogram-region-label">
+                                Superior esquerdo — decíduos
+                            </div>
+
+                            <div class="odontogram-region-numbers deciduous">
+                                {% for dente in dentes_deciduos_superiores[5:] %}
+                                    <span>{{ dente }}</span>
+                                {% endfor %}
+                            </div>
+
+                            <div class="odontogram-region-row deciduous">
+                                {% for dente in dentes_deciduos_superiores[5:] %}
+                                    {% set dados = odontograma.get(dente|string) %}
+                                    <div class="odontogram-region-cell">
+                                        <button
+                                            type="button"
+                                            id="dente-{{ dente }}"
+                                            class="odonto-q-tooth
+                                            {% if dados %}
+                                                estado-{{ dados['estado']|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                            {% endif %}
+                                            "
+                                            onclick="selecionarDente('{{ dente }}')"
+                                        >
+                                            <svg viewBox="0 0 54 82" class="odonto-q-tooth-svg">
+                                                <path
+                                                    d="M14 18 Q15 7 27 7 Q39 7 40 18 L38 43 Q36 53 31 60 L29 76 Q27 82 25 76 L23 60 Q18 53 16 43 Z"
+                                                    class="odonto-q-outline"
+                                                />
+                                                <path
+                                                    d="M16 25 Q27 30 38 25"
+                                                    class="odonto-q-detail"
+                                                />
+                                            </svg>
+                                        </button>
+                                        <div class="odonto-q-fivefaces">
+                                            {% for face, letra in [
+                                                ("Mesial", "M"),
+                                                ("Vestibular", "V"),
+                                                ("Oclusal/Incisal", "O"),
+                                                ("Lingual/Palatina", "L"),
+                                                ("Distal", "D")
+                                            ] %}
+                                                {% set chave = (dente|string) ~ "|" ~ face %}
+                                                {% set estado_face = faces.get(chave) %}
+                                                <button
+                                                    type="button"
+                                                    class="odonto-q-face
+                                                    face-{{ face|lower|replace('/','-')|replace(' ','-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% if estado_face %}
+                                                        estado-{{ estado_face|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% endif %}
+                                                    "
+                                                    data-dente="{{ dente }}"
+                                                    data-face="{{ face }}"
+                                                    onclick="selecionarFace('{{ dente }}', '{{ face }}', this)"
+                                                >
+                                                    {{ letra }}
+                                                </button>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+
+                        <section class="odontogram-region q4 deciduous-region">
+                            <div class="odontogram-region-label">
+                                Inferior direito — decíduos
+                            </div>
+
+                            <div class="odontogram-region-row deciduous lower">
+                                {% for dente in dentes_deciduos_inferiores[:5] %}
+                                    {% set dados = odontograma.get(dente|string) %}
+                                    <div class="odontogram-region-cell">
+                                        <div class="odonto-q-fivefaces lower">
+                                            {% for face, letra in [
+                                                ("Mesial", "M"),
+                                                ("Vestibular", "V"),
+                                                ("Oclusal/Incisal", "O"),
+                                                ("Lingual/Palatina", "L"),
+                                                ("Distal", "D")
+                                            ] %}
+                                                {% set chave = (dente|string) ~ "|" ~ face %}
+                                                {% set estado_face = faces.get(chave) %}
+                                                <button
+                                                    type="button"
+                                                    class="odonto-q-face
+                                                    face-{{ face|lower|replace('/','-')|replace(' ','-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% if estado_face %}
+                                                        estado-{{ estado_face|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% endif %}
+                                                    "
+                                                    data-dente="{{ dente }}"
+                                                    data-face="{{ face }}"
+                                                    onclick="selecionarFace('{{ dente }}', '{{ face }}', this)"
+                                                >
+                                                    {{ letra }}
+                                                </button>
+                                            {% endfor %}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            id="dente-{{ dente }}"
+                                            class="odonto-q-tooth lower
+                                            {% if dados %}
+                                                estado-{{ dados['estado']|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                            {% endif %}
+                                            "
+                                            onclick="selecionarDente('{{ dente }}')"
+                                        >
+                                            <svg viewBox="0 0 54 82" class="odonto-q-tooth-svg">
+                                                <path
+                                                    d="M14 18 Q15 7 27 7 Q39 7 40 18 L38 43 Q36 53 31 60 L29 76 Q27 82 25 76 L23 60 Q18 53 16 43 Z"
+                                                    class="odonto-q-outline"
+                                                />
+                                                <path
+                                                    d="M16 25 Q27 30 38 25"
+                                                    class="odonto-q-detail"
+                                                />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="odontogram-region-numbers deciduous lower">
+                                {% for dente in dentes_deciduos_inferiores[:5] %}
+                                    <span>{{ dente }}</span>
+                                {% endfor %}
+                            </div>
+                        </section>
+
+                        <section class="odontogram-region q3 deciduous-region">
+                            <div class="odontogram-region-label">
+                                Inferior esquerdo — decíduos
+                            </div>
+
+                            <div class="odontogram-region-row deciduous lower">
+                                {% for dente in dentes_deciduos_inferiores[5:] %}
+                                    {% set dados = odontograma.get(dente|string) %}
+                                    <div class="odontogram-region-cell">
+                                        <div class="odonto-q-fivefaces lower">
+                                            {% for face, letra in [
+                                                ("Mesial", "M"),
+                                                ("Vestibular", "V"),
+                                                ("Oclusal/Incisal", "O"),
+                                                ("Lingual/Palatina", "L"),
+                                                ("Distal", "D")
+                                            ] %}
+                                                {% set chave = (dente|string) ~ "|" ~ face %}
+                                                {% set estado_face = faces.get(chave) %}
+                                                <button
+                                                    type="button"
+                                                    class="odonto-q-face
+                                                    face-{{ face|lower|replace('/','-')|replace(' ','-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% if estado_face %}
+                                                        estado-{{ estado_face|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                                    {% endif %}
+                                                    "
+                                                    data-dente="{{ dente }}"
+                                                    data-face="{{ face }}"
+                                                    onclick="selecionarFace('{{ dente }}', '{{ face }}', this)"
+                                                >
+                                                    {{ letra }}
+                                                </button>
+                                            {% endfor %}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            id="dente-{{ dente }}"
+                                            class="odonto-q-tooth lower
+                                            {% if dados %}
+                                                estado-{{ dados['estado']|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}
+                                            {% endif %}
+                                            "
+                                            onclick="selecionarDente('{{ dente }}')"
+                                        >
+                                            <svg viewBox="0 0 54 82" class="odonto-q-tooth-svg">
+                                                <path
+                                                    d="M14 18 Q15 7 27 7 Q39 7 40 18 L38 43 Q36 53 31 60 L29 76 Q27 82 25 76 L23 60 Q18 53 16 43 Z"
+                                                    class="odonto-q-outline"
+                                                />
+                                                <path
+                                                    d="M16 25 Q27 30 38 25"
+                                                    class="odonto-q-detail"
+                                                />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="odontogram-region-numbers deciduous lower">
+                                {% for dente in dentes_deciduos_inferiores[5:] %}
+                                    <span>{{ dente }}</span>
+                                {% endfor %}
+                            </div>
+                        </section>
+
+                    </div>
+                </div>
+            </div>
+
+            <aside class="odontogram-side-panel">
+                <span class="odontogram-panel-kicker">
+                    Seleção atual
+                </span>
+
+                <div class="odontogram-panel-selected">
+                    <div>
+                        <small>Dente</small>
+                        <strong id="panelDente">—</strong>
+                    </div>
+
+                    <div>
+                        <small>Área</small>
+                        <strong id="panelFace">Dente inteiro</strong>
+                    </div>
+                </div>
+
+                <div class="odontogram-panel-info">
+                    <div>
+                        <span>Arcada</span>
+                        <strong id="panelArcada">—</strong>
+                    </div>
+
+                    <div>
+                        <span>Estado atual</span>
+                        <strong id="panelEstado">—</strong>
+                    </div>
+
+                    <div>
+                        <span>Atualizado</span>
+                        <strong id="panelAtualizado">—</strong>
+                    </div>
+                </div>
+
+                <div class="whole-tooth-face-hint">
+                    <strong> Dente inteiro também é uma face</strong>
+                    <span>
+                        Clique no desenho do dente para marcar o dente inteiro.
+                        Clique no mapa para escolher uma face específica.
+                    </span>
+                </div>
+
+                <div class="odontogram-panel-state">
+                    <span class="odontogram-panel-label">
+                        Estado / condição
+                    </span>
+
+                    <div class="odontogram-state-grid">
+                        {% for estado in [
+                            "Limpeza",
+                            "Restauração",
+                            "Manutenção",
+                            "Implante",
+                            "Cárie",
+                            "Ausente",
+                            "Extração",
+                            "Canal",
+                            "Prótese",
+                            "Fraturado"
+                        ] %}
+                            <button
+                                type="button"
+                                class="odontogram-state-button"
+                                onclick="aplicarEstado('{{ estado }}')"
+                            >
+                                <i class="state-dot estado-{{ estado|lower|replace(' ', '-')|replace('ç','c')|replace('ã','a')|replace('á','a')|replace('é','e')|replace('ó','o')|replace('ú','u')|replace('í','i') }}"></i>
+                                {{ estado }}
+                            </button>
+                        {% endfor %}
+                    </div>
+
+                    <button
+                        type="button"
+                        class="odontogram-clear-button"
+                        onclick="aplicarEstado('Limpar')"
+                    >
+                        Limpar marcação
+                    </button>
+                </div>
+
+                <div class="odontogram-panel-note">
+                    <label for="observacao">
+                        Observação do dente
+                    </label>
+
+                    <textarea
+                        id="observacao"
+                        rows="4"
+                        placeholder="Ex.: dente com sensibilidade, revisar em 30 dias..."
+                    ></textarea>
+
+                    <button
+                        type="button"
+                        class="button primary full-button"
+                        onclick="salvarObservacao()"
+                    >
+                        Salvar observação
+                    </button>
+                </div>
+
+                <div
+                    id="odontoStatus"
+                    class="odontogram-save-status"
+                ></div>
+            </aside>
+        </div>
+    </section>
+
+    <section class="table-card odontogram-pro-records">
+        <div class="section-title">
+            <div>
+                <h2>Registros clínicos do odontograma</h2>
+                <p class="section-description">
+                    Registros ligados diretamente ao dente inteiro ou a uma face específica.
+                </p>
+            </div>
+        </div>
+
+        <form
+            action="{{ url_for('adicionar_procedimento_odontograma_web', paciente_id=paciente['id']) }}"
+            method="POST"
+            class="odontogram-pro-record-form"
+            id="formRegistroOdonto"
+            autocomplete="off"
+        >
+            <input type="hidden" name="dente" id="registroDente">
+            <input type="hidden" name="face" id="registroFace">
+
+            <div class="form-group">
+                <label>Registro / procedimento</label>
+                <input
+                    type="text"
+                    name="procedimento"
+                    list="procedimentosOdontograma"
+                    placeholder="Ex.: limpeza, restauração, canal..."
+                    required
+                >
+                <datalist id="procedimentosOdontograma">
+                    <option value="Limpeza"></option>
+                    <option value="Restauração"></option>
+                    <option value="Manutenção"></option>
+                    <option value="Implante"></option>
+                    <option value="Cárie"></option>
+                    <option value="Ausente"></option>
+                    <option value="Extração"></option>
+                    <option value="Canal"></option>
+                    <option value="Prótese"></option>
+                    <option value="Fraturado"></option>
+                    <option value="Avaliação"></option>
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label>Data</label>
+                <input
+                    type="date"
+                    name="data_procedimento"
+                    value="{{ hoje }}"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Estado</label>
+                <select name="estado" required>
+                    {% for estado in [
+                        "Limpeza",
+                        "Restauração",
+                        "Manutenção",
+                        "Implante",
+                        "Cárie",
+                        "Ausente",
+                        "Extração",
+                        "Canal",
+                        "Prótese",
+                        "Fraturado"
+                    ] %}
+                        <option value="{{ estado }}">
+                            {{ estado }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group selected-face-summary">
+                <label>Dente / face selecionados</label>
+                <div id="registroSelecao">
+                    Selecione o dente inteiro ou uma face acima
+                </div>
+            </div>
+
+            <div class="form-group full">
+                <label>Descrição clínica</label>
+                <textarea
+                    name="descricao"
+                    rows="3"
+                    placeholder="Informações clínicas, conduta, material, orientação..."
+                ></textarea>
+            </div>
+
+            <div class="form-group full odontogram-pro-record-submit">
+                <button
+                    type="submit"
+                    class="button primary"
+                >
+                    + Adicionar registro
+                </button>
+            </div>
+        </form>
+
+        {% if procedimentos %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Registro</th>
+                            <th>Dente</th>
+                            <th>Face</th>
+                            <th>Estado</th>
+                            <th>Descrição</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in procedimentos %}
+                            <tr>
+                                <td>{{ item["data_procedimento"] }}</td>
+                                <td><strong>{{ item["procedimento"] }}</strong></td>
+                                <td><strong>{{ item["dente"] }}</strong></td>
+                                <td>{{ item["face"] }}</td>
+                                <td><span class="odontogram-pro-state-pill">{{ item["estado"] }}</span></td>
+                                <td>{{ item["descricao"] or "-" }}</td>
+                                <td>
+                                    <form
+                                        action="{{ url_for(
+                                            'excluir_procedimento_odontograma_web',
+                                            paciente_id=paciente['id'],
+                                            procedimento_id=item['id']
+                                        ) }}"
+                                        method="POST"
+                                    >
+                                        <button
+                                            type="submit"
+                                            class="delete-button"
+                                            onclick="return confirm('Excluir este registro clínico?');"
+                                        >
+                                            Excluir
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty small-empty">
+                <span></span>
+                <h3>Nenhum registro clínico</h3>
+                <p>Selecione um dente e uma face para adicionar informações.</p>
+            </div>
+        {% endif %}
+    </section>
+
+</main>
+
+<script>
+const odontogramaDados = JSON.parse('{{ odontograma | tojson | safe }}');
+const facesDados = JSON.parse('{{ faces | tojson | safe }}');
+
+const urlSalvarDente =
+    "{{ url_for('salvar_odontograma', paciente_id=paciente['id']) }}";
+
+const urlSalvarFace =
+    "{{ url_for('salvar_face_odontograma_web', paciente_id=paciente['id']) }}";
+
+let denteAtual = null;
+let faceAtual = null;
+
+function normalizarEstado(estado) {
+    return "estado-" + String(estado || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, "-");
+}
+
+const classesEstados = [
+    "estado-limpeza",
+    "estado-restauracao",
+    "estado-manutencao",
+    "estado-implante",
+    "estado-carie",
+    "estado-ausente",
+    "estado-extracao",
+    "estado-canal",
+    "estado-protese",
+    "estado-fraturado",
+    // compatibilidade visual temporária
+    "estado-restaurado",
+    "estado-extracao-indicada",
+    "estado-saudavel"
+];
+
+function trocarDenticao(id, botao) {
+    document.querySelectorAll(
+        ".odontogram-quadrant-dentition"
+    ).forEach(function (item) {
+        item.classList.remove("active");
+    });
+
+    document.querySelectorAll(
+        ".odontogram-quadrant-tab"
+    ).forEach(function (item) {
+        item.classList.remove("active");
+    });
+
+    document.getElementById(id).classList.add("active");
+    botao.classList.add("active");
+}
+
+function inferirArcada(numero) {
+    const n = parseInt(numero, 10);
+
+    if (n >= 11 && n <= 18) return "Quadrante 1";
+    if (n >= 21 && n <= 28) return "Quadrante 2";
+    if (n >= 31 && n <= 38) return "Quadrante 3";
+    if (n >= 41 && n <= 48) return "Quadrante 4";
+    if (n >= 51 && n <= 55) return "Decíduo superior direito";
+    if (n >= 61 && n <= 65) return "Decíduo superior esquerdo";
+    if (n >= 71 && n <= 75) return "Decíduo inferior esquerdo";
+    if (n >= 81 && n <= 85) return "Decíduo inferior direito";
+    return "—";
+}
+
+function atualizarPainel() {
+    const dados = odontogramaDados[denteAtual] || {};
+
+    document.getElementById("panelDente").textContent =
+        denteAtual || "—";
+
+    document.getElementById("panelFace").textContent =
+        faceAtual || "Dente inteiro";
+
+    document.getElementById("panelArcada").textContent =
+        dados.arcada || (denteAtual ? inferirArcada(denteAtual) : "—");
+
+    let estadoAtual = dados.estado || "Sem marcação";
+
+    if (faceAtual && faceAtual !== "Dente inteiro") {
+        const chave = denteAtual + "|" + faceAtual;
+
+        if (facesDados[chave]) {
+            estadoAtual = facesDados[chave];
+        }
+    }
+
+    document.getElementById("panelEstado").textContent =
+        estadoAtual;
+
+    document.getElementById("panelAtualizado").textContent =
+        dados.atualizado_em || "—";
+
+    document.getElementById("observacao").value =
+        dados.observacao || "";
+
+    document.getElementById("registroDente").value =
+        denteAtual || "";
+
+    document.getElementById("registroFace").value =
+        faceAtual || "";
+
+    document.getElementById("registroSelecao").textContent =
+        denteAtual
+            ? "Dente " + denteAtual + " — " + (faceAtual || "selecione a face")
+            : "Selecione o dente inteiro ou uma face acima";
+}
+
+function selecionarDente(numero) {
+    denteAtual = String(numero);
+
+    /*
+    O desenho anatômico do dente passa a funcionar
+    como uma face própria.
+    */
+    faceAtual = "Dente inteiro";
+
+    document.querySelectorAll(
+        ".odonto-q-tooth"
+    ).forEach(function (item) {
+        item.classList.remove("selected");
+    });
+
+    document.querySelectorAll(
+        ".odonto-q-face"
+    ).forEach(function (item) {
+        item.classList.remove("selected");
+    });
+
+    document.getElementById("dente-" + denteAtual)?.classList.add("selected");
+    atualizarPainel();
+}
+
+function selecionarFace(dente, face, elemento) {
+    denteAtual = String(dente);
+    faceAtual = face;
+
+    document.querySelectorAll(
+        ".odonto-q-face"
+    ).forEach(function (item) {
+        item.classList.remove("selected");
+    });
+
+    document.querySelectorAll(
+        ".odonto-q-tooth"
+    ).forEach(function (item) {
+        item.classList.remove("selected");
+    });
+
+    elemento.classList.add("selected");
+    document.getElementById("dente-" + denteAtual)?.classList.add("selected");
+
+    atualizarPainel();
+}
+
+async function salvarDenteInteiro(estado) {
+    const resposta = await fetch(
+        urlSalvarDente,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                dente: denteAtual,
+                estado: estado,
+                observacao: document.getElementById("observacao").value
+            })
+        }
+    );
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+        throw new Error(dados.erro || "Não foi possível salvar.");
+    }
+
+    return dados;
+}
+
+async function salvarFace(estado) {
+    const resposta = await fetch(
+        urlSalvarFace,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                dente: denteAtual,
+                face: faceAtual,
+                estado: estado
+            })
+        }
+    );
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+        throw new Error(dados.erro || "Não foi possível salvar a face.");
+    }
+
+    return dados;
+}
+
+function limparClasses(elemento) {
+    if (!elemento) return;
+    classesEstados.forEach(function (classe) {
+        elemento.classList.remove(classe);
+    });
+}
+
+async function aplicarEstado(estado) {
+    if (!denteAtual) {
+        alert("Selecione um dente primeiro.");
+        return;
+    }
+
+    try {
+        if (faceAtual && faceAtual !== "Dente inteiro") {
+            await salvarFace(estado);
+
+            const chave = denteAtual + "|" + faceAtual;
+
+            const zona = document.querySelector(
+                '.odonto-q-face[data-dente="' +
+                denteAtual +
+                '"][data-face="' +
+                faceAtual +
+                '"]'
+            );
+
+            limparClasses(zona);
+
+            if (estado === "Limpar") {
+                delete facesDados[chave];
+            } else {
+                facesDados[chave] = estado;
+                zona?.classList.add(normalizarEstado(estado));
+            }
+
+        } else {
+            const dados = await salvarDenteInteiro(estado);
+
+            const dente = document.getElementById("dente-" + denteAtual);
+
+            limparClasses(dente);
+
+            if (estado === "Limpar") {
+                delete odontogramaDados[denteAtual];
+            } else {
+                odontogramaDados[denteAtual] = {
+                    ...(odontogramaDados[denteAtual] || {}),
+                    estado: dados.estado || estado,
+                    observacao: dados.observacao || document.getElementById("observacao").value
+                };
+                dente?.classList.add(normalizarEstado(estado));
+            }
+        }
+
+        atualizarPainel();
+        mostrarStatus("Informação salva.");
+
+    } catch (erro) {
+        mostrarStatus(erro.message, true);
+    }
+}
+
+async function salvarObservacao() {
+    if (!denteAtual) {
+        alert("Selecione um dente primeiro.");
+        return;
+    }
+
+    const estado =
+        odontogramaDados[denteAtual]?.estado || "Limpeza";
+
+    try {
+        const dados = await salvarDenteInteiro(estado);
+
+        odontogramaDados[denteAtual] = {
+            ...(odontogramaDados[denteAtual] || {}),
+            estado: dados.estado || estado,
+            observacao: document.getElementById("observacao").value
+        };
+
+        atualizarPainel();
+        mostrarStatus("Observação salva.");
+
+    } catch (erro) {
+        mostrarStatus(erro.message, true);
+    }
+}
+
+function mostrarStatus(mensagem, erro = false) {
+    const elemento =
+        document.getElementById("odontoStatus");
+
+    elemento.textContent = mensagem;
+    elemento.classList.toggle("erro", erro);
+
+    clearTimeout(mostrarStatus.timer);
+
+    mostrarStatus.timer = setTimeout(
+        function () {
+            elemento.textContent = "";
+        },
+        2600
+    );
+}
+
+document
+    .getElementById("formRegistroOdonto")
+    .addEventListener(
+        "submit",
+        function (evento) {
+            if (!denteAtual || !faceAtual) {
+                evento.preventDefault();
+                alert(
+                    "Selecione o dente inteiro ou uma face antes de adicionar o registro."
+                );
+            }
+        }
+    );
+</script>
+
+</body>
+</html>

@@ -1,0 +1,236 @@
+{% set molar = dente in [18,17,16,26,27,28,48,47,46,36,37,38,55,54,64,65,85,84,74,75] %}
+{% set premolar = dente in [15,14,24,25,45,44,34,35] %}
+{% set canine = dente in [13,23,43,33,53,63,83,73] %}
+{% set inferior = dente in dentes_inferiores_esquerda or dente in dentes_inferiores_direita or dente in dentes_deciduos_inferiores %}
+
+{% macro classe_estado(dente, face) -%}
+    {%- set chave = (dente|string) ~ "|" ~ face -%}
+    {%- set estado = faces.get(chave, "") -%}
+    {%- if estado -%}
+        estado-{{ estado|lower
+            |replace('á','a')
+            |replace('ã','a')
+            |replace('â','a')
+            |replace('é','e')
+            |replace('ê','e')
+            |replace('í','i')
+            |replace('ó','o')
+            |replace('ô','o')
+            |replace('ú','u')
+            |replace('ç','c')
+            |replace(' ', '-')
+        }}
+    {%- endif -%}
+{%- endmacro %}
+
+<div class="anatomical-tooth {% if inferior %}tooth-lower{% endif %}" data-tooth="{{ dente }}">
+    <div class="anatomical-tooth-number">{{ dente }}</div>
+
+    <!-- VISTA VESTIBULAR -->
+    <button
+        type="button"
+        class="anatomical-face-button face-view-button {{ classe_estado(dente, 'Vestibular') }}"
+        data-dente="{{ dente }}"
+        data-face="Vestibular"
+        title="Dente {{ dente }} — Vestibular"
+        onclick="selecionarFace('{{ dente }}', 'Vestibular', this)"
+    >
+        <svg viewBox="0 0 70 92" class="tooth-anatomy-svg" aria-hidden="true">
+            {% if molar %}
+                <path d="M14 30
+                         C10 18 15 9 24 8
+                         C29 3 35 5 38 9
+                         C42 3 51 5 55 11
+                         C62 20 58 31 56 39
+                         L53 54
+                         C51 66 49 75 47 88
+                         C46 92 42 92 40 87
+                         L36 67
+                         L33 87
+                         C31 93 27 93 25 87
+                         L22 67
+                         L18 87
+                         C16 92 12 92 11 87
+                         C10 72 12 63 14 53 Z"
+                      class="tooth-outline"/>
+                <path d="M17 39 C25 44 45 44 54 39" class="tooth-detail"/>
+                <path d="M26 9 C27 17 26 23 24 30" class="tooth-detail"/>
+                <path d="M40 9 C40 18 42 24 44 30" class="tooth-detail"/>
+            {% elif premolar %}
+                <path d="M19 28
+                         C16 17 22 8 31 10
+                         C35 5 40 5 44 10
+                         C53 8 58 18 54 29
+                         L51 50
+                         C49 61 45 72 42 89
+                         C41 94 36 94 34 88
+                         L32 68
+                         L29 88
+                         C27 94 22 94 21 89
+                         C19 73 17 61 18 50 Z"
+                      class="tooth-outline"/>
+                <path d="M20 39 C28 43 45 43 52 39" class="tooth-detail"/>
+            {% elif canine %}
+                <path d="M27 8
+                         C35 3 45 6 49 15
+                         C53 25 50 39 48 49
+                         C46 61 43 72 41 89
+                         C40 94 35 94 33 89
+                         L30 66
+                         C27 55 23 42 22 31
+                         C21 20 21 13 27 8 Z"
+                      class="tooth-outline"/>
+                <path d="M24 37 C31 42 41 42 48 37" class="tooth-detail"/>
+            {% else %}
+                <path d="M24 9
+                         C31 4 43 4 49 10
+                         C54 18 52 36 50 48
+                         C48 59 44 72 42 89
+                         C41 94 35 94 33 89
+                         L30 68
+                         C28 57 24 47 22 36
+                         C20 25 19 14 24 9 Z"
+                      class="tooth-outline"/>
+                <path d="M23 36 C31 40 43 40 50 36" class="tooth-detail"/>
+            {% endif %}
+        </svg>
+        <span class="face-view-label">V</span>
+    </button>
+
+    <!-- VISTA OCLUSAL/INCISAL DIVIDIDA EM 3 ÁREAS -->
+    <div class="surface-map" aria-label="Faces proximais e oclusal do dente {{ dente }}">
+        <svg viewBox="0 0 70 48" class="surface-svg" aria-hidden="true">
+            {% if molar %}
+                <path d="M8 24
+                         C8 12 18 5 35 5
+                         C52 5 62 12 62 24
+                         C62 36 52 43 35 43
+                         C18 43 8 36 8 24 Z"
+                      class="surface-base"/>
+                <path d="M22 13 C29 19 29 29 22 35" class="surface-detail"/>
+                <path d="M48 13 C41 19 41 29 48 35" class="surface-detail"/>
+                <path d="M27 24 H43" class="surface-detail"/>
+            {% elif premolar %}
+                <path d="M13 24
+                         C13 12 22 6 35 6
+                         C48 6 57 12 57 24
+                         C57 36 48 42 35 42
+                         C22 42 13 36 13 24 Z"
+                      class="surface-base"/>
+                <path d="M24 14 C30 19 30 29 24 34" class="surface-detail"/>
+                <path d="M46 14 C40 19 40 29 46 34" class="surface-detail"/>
+            {% else %}
+                <path d="M17 24
+                         C17 14 24 8 35 8
+                         C46 8 53 14 53 24
+                         C53 34 46 40 35 40
+                         C24 40 17 34 17 24 Z"
+                      class="surface-base"/>
+                <path d="M25 25 C30 19 40 19 45 25" class="surface-detail"/>
+            {% endif %}
+        </svg>
+
+        <button
+            type="button"
+            class="surface-zone surface-mesial {{ classe_estado(dente, 'Mesial') }}"
+            data-dente="{{ dente }}"
+            data-face="Mesial"
+            title="Mesial"
+            onclick="selecionarFace('{{ dente }}', 'Mesial', this)"
+        >
+            <span>M</span>
+        </button>
+
+        <button
+            type="button"
+            class="surface-zone surface-center {{ classe_estado(dente, 'Oclusal/Incisal') }}"
+            data-dente="{{ dente }}"
+            data-face="Oclusal/Incisal"
+            title="Oclusal / Incisal"
+            onclick="selecionarFace('{{ dente }}', 'Oclusal/Incisal', this)"
+        >
+            <span>O</span>
+        </button>
+
+        <button
+            type="button"
+            class="surface-zone surface-distal {{ classe_estado(dente, 'Distal') }}"
+            data-dente="{{ dente }}"
+            data-face="Distal"
+            title="Distal"
+            onclick="selecionarFace('{{ dente }}', 'Distal', this)"
+        >
+            <span>D</span>
+        </button>
+    </div>
+
+    <!-- VISTA LINGUAL / PALATINA -->
+    <button
+        type="button"
+        class="anatomical-face-button face-view-button lingual-view {{ classe_estado(dente, 'Lingual/Palatina') }}"
+        data-dente="{{ dente }}"
+        data-face="Lingual/Palatina"
+        title="Dente {{ dente }} — Lingual/Palatina"
+        onclick="selecionarFace('{{ dente }}', 'Lingual/Palatina', this)"
+    >
+        <svg viewBox="0 0 70 92" class="tooth-anatomy-svg" aria-hidden="true">
+            {% if molar %}
+                <path d="M15 31
+                         C12 19 17 10 25 9
+                         C31 5 36 7 39 11
+                         C44 5 52 8 56 14
+                         C60 22 57 32 55 40
+                         L52 54
+                         C50 66 48 77 46 88
+                         C45 92 41 92 39 87
+                         L35 66
+                         L31 87
+                         C29 93 25 93 23 87
+                         L20 66
+                         L17 87
+                         C15 92 11 92 10 87
+                         C10 74 12 63 14 53 Z"
+                      class="tooth-outline"/>
+                <path d="M18 40 C28 46 44 46 53 40" class="tooth-detail"/>
+                <path d="M27 17 C31 22 39 22 44 17" class="tooth-detail"/>
+            {% elif premolar %}
+                <path d="M20 29
+                         C17 18 22 9 31 10
+                         C36 6 42 7 46 12
+                         C53 12 57 20 54 30
+                         L50 50
+                         C47 64 44 75 42 89
+                         C41 94 36 94 34 88
+                         L31 68
+                         L28 88
+                         C26 94 22 94 20 89
+                         C19 73 17 62 18 50 Z"
+                      class="tooth-outline"/>
+                <path d="M21 40 C29 45 45 45 52 40" class="tooth-detail"/>
+            {% elif canine %}
+                <path d="M27 9
+                         C35 4 44 7 48 16
+                         C52 26 50 38 47 49
+                         C45 62 43 75 41 89
+                         C40 94 35 94 33 89
+                         L30 66
+                         C27 55 23 43 22 31
+                         C21 21 22 14 27 9 Z"
+                      class="tooth-outline"/>
+                <path d="M27 28 C32 33 40 33 45 28" class="tooth-detail"/>
+            {% else %}
+                <path d="M24 10
+                         C31 5 43 5 49 11
+                         C54 19 52 36 50 48
+                         C47 60 44 74 42 89
+                         C41 94 35 94 33 89
+                         L30 68
+                         C28 57 24 47 22 36
+                         C20 26 19 15 24 10 Z"
+                      class="tooth-outline"/>
+                <path d="M26 27 C31 32 42 32 47 27" class="tooth-detail"/>
+            {% endif %}
+        </svg>
+        <span class="face-view-label">L/P</span>
+    </button>
+</div>
