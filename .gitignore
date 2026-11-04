@@ -20,6 +20,9 @@ dentista.db-shm
 dentista.db-journal
 backups/
 
+# Banco de demonstração gerado por scripts/seed_demo.py
+demo/
+
 # Cache e temporários
 .pytest_cache/
 .cache/

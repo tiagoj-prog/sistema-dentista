@@ -13,6 +13,26 @@ O sistema concentra funcionalidades de:
 - Financeiro: orçamentos, contas a receber/pagar, movimentações, despesas recorrentes e relatórios
 - Backup mensal do banco de dados
 
+## Telas do sistema
+
+Dashboard:
+
+![Dashboard do sistema](docs/screenshots/dashboard.png)
+
+Agenda semanal:
+
+![Agenda semanal](docs/screenshots/agenda.png)
+
+Odontograma:
+
+![Odontograma](docs/screenshots/odontograma.png)
+
+Financeiro:
+
+![Controle financeiro](docs/screenshots/financeiro.png)
+
+As imagens usam dados fictícios. Nenhum dado real de paciente é publicado.
+
 ## Estrutura do projeto
 
 ```text
@@ -23,6 +43,8 @@ Sistema dentista/
 ├── dentista.db                    # banco SQLite (não versionado)
 ├── backups/                       # backups mensais (não versionados)
 ├── docs/architecture.md
+├── docs/screenshots/              # imagens usadas no README
+├── scripts/                       # demonstração com dados fictícios
 ├── tests/test_smoke.py
 └── sistema_dentista/
     ├── config.py                  # caminhos, host, porta, debug e chave secreta
@@ -95,6 +117,19 @@ Não é necessário criar arquivo `.env` para rodar localmente. As configuraçõ
 | `FLASK_DEBUG` | `1`, `true` ou `yes` ativam o modo debug. Padrão: desligado. |
 
 `HOST` (`127.0.0.1`) e `PORT` (`5000`) são definidos em `config.py`.
+
+## Demonstração com dados fictícios
+
+Para conhecer o sistema sem tocar no banco real:
+
+```bash
+python scripts/seed_demo.py
+python scripts/run_demo.py
+```
+
+O primeiro comando cria `demo/dentista_demo.db` com pacientes, agenda, odontograma e lançamentos fictícios. O segundo inicia a aplicação em `http://127.0.0.1:5001` usando esse banco.
+
+O arquivo `dentista.db` não é lido nem alterado por esses scripts. A pasta `demo/` é ignorada pelo Git.
 
 ## Testes
 

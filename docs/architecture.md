@@ -43,6 +43,9 @@ Sistema dentista/
 ├── dentista.db                    # banco (não versionado)
 ├── backups/                       # backups mensais (não versionados)
 ├── docs/architecture.md
+├── docs/screenshots/              # imagens do README
+├── scripts/seed_demo.py           # banco de demonstração
+├── scripts/run_demo.py            # executa com o banco de demonstração
 ├── tests/test_smoke.py
 └── sistema_dentista/
     ├── __init__.py                # create_flask_app, initialize_database, create_app
@@ -197,7 +200,7 @@ Itens identificados e ainda não executados:
 - Cobertura de testes restrita a smoke tests.
 - Ausência de linter/formatter e de versões fixadas em `requirements.txt`.
 - Sem índices explícitos para colunas usadas em filtros frequentes.
-- Projeto ainda sem versionamento Git nesta máquina.
+- Sem integração contínua (CI) configurada.
 
 Nenhuma dessas pendências altera o comportamento atual; são melhorias de manutenção.
 
@@ -210,3 +213,4 @@ Nenhuma dessas pendências altera o comportamento atual; são melhorias de manut
 5. Exclusão permanente de paciente endurecida (verificação prévia de tabelas, transação e rollback).
 6. Backup mensal passou a validar integridade e colocar arquivos inválidos em quarentena.
 7. Interface modernizada (tema azul, ícones SVG próprios) sem alterar rotas ou regras.
+8. Banco de demonstração isolado (`scripts/seed_demo.py` e `scripts/run_demo.py`) para capturas de tela e testes sem usar dados reais.
