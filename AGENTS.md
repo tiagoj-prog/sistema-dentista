@@ -86,6 +86,7 @@ O sistema utiliza Python, Flask, HTML, CSS, JavaScript e SQLite, organizado em c
 - `scripts/seed_demo.py`: cria `demo/dentista_demo.db` com dados fictícios.
 - `scripts/run_demo.py`: executa a aplicação na porta 5001 com o banco de demonstração.
 - `tests/test_smoke.py`: smoke tests.
+- `.github/workflows/tests.yml`: integração contínua (sintaxe + testes a cada push).
 - `VERIFICAR_BANCO.py`: diagnóstico do banco.
 
 Comandos de referência:

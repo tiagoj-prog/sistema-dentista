@@ -1,5 +1,8 @@
 # Sistema Dentista
 
+[![Testes](https://github.com/tiagoj-prog/sistema-dentista/actions/workflows/tests.yml/badge.svg)](https://github.com/tiagoj-prog/sistema-dentista/actions/workflows/tests.yml)
+[![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE)
+
 Sistema web para apoio à gestão de um consultório odontológico. O projeto utiliza Python, Flask, SQLite, HTML, CSS e JavaScript.
 
 ## Visão geral
@@ -140,6 +143,8 @@ python -m unittest tests.test_smoke
 ```
 
 Os testes verificam a criação da aplicação, a quantidade de rotas (39), os endpoints esperados e o registro do backup mensal. Eles não inicializam o banco nem executam migrações.
+
+O workflow `.github/workflows/tests.yml` executa esses testes automaticamente a cada push e pull request na branch `main`.
 
 ## Banco de dados
 

@@ -200,7 +200,6 @@ Itens identificados e ainda não executados:
 - Cobertura de testes restrita a smoke tests.
 - Ausência de linter/formatter e de versões fixadas em `requirements.txt`.
 - Sem índices explícitos para colunas usadas em filtros frequentes.
-- Sem integração contínua (CI) configurada.
 
 Nenhuma dessas pendências altera o comportamento atual; são melhorias de manutenção.
 
