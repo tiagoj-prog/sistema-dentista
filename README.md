@@ -1,7 +1,7 @@
 # Sistema Dentista
 
 [![Testes](https://github.com/tiagoj-prog/sistema-dentista/actions/workflows/tests.yml/badge.svg)](https://github.com/tiagoj-prog/sistema-dentista/actions/workflows/tests.yml)
-[![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE)
+[![Licença: PolyForm Noncommercial](https://img.shields.io/badge/licen%C3%A7a-n%C3%A3o--comercial-blue.svg)](LICENSE)
 
 Sistema web para apoio à gestão de um consultório odontológico. O projeto utiliza Python, Flask, SQLite, HTML, CSS e JavaScript.
 
@@ -220,6 +220,24 @@ A arquitetura em camadas descrita acima já está implementada. O documento `doc
 
 Arquivos gerados pelo Python, ambientes virtuais e dados mutáveis de runtime são ignorados conforme `.gitignore`. Configurações compartilháveis da pasta `.vscode/` podem ser versionadas quando apropriado.
 
-## Licença
+## Licença e uso
 
-Este projeto está licenciado sob a licença MIT. Consulte o arquivo `LICENSE`.
+Este projeto usa a **PolyForm Noncommercial License 1.0.0**. O texto completo está em `LICENSE`.
+
+Resumo em linguagem simples:
+
+| Uso | Permitido? |
+| --- | --- |
+| Ler, estudar e executar o sistema | Sim |
+| Usar em projeto pessoal, pesquisa ou teste | Sim |
+| Usar em escola, ONG, órgão público ou instituição de saúde pública | Sim |
+| Copiar e modificar para uso pessoal | Sim |
+| Usar em clínica ou empresa com finalidade comercial | **Não** |
+| Vender o software ou um produto baseado nele | **Não** |
+| Oferecer o sistema como serviço pago | **Não** |
+
+Quem recebe uma cópia deve manter o aviso de copyright e o link da licença.
+
+Para uso comercial, é necessário autorização por escrito do autor.
+
+> Este resumo é apenas orientação. O texto do `LICENSE` é o que vale juridicamente.

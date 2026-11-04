@@ -189,6 +189,7 @@ Se houver falha, não continuar e restaurar a partir do backup externo.
 | Camadas `repositories`/`services` | Separar SQL de regra de negócio e permitir testes sem Flask. |
 | Shims na raiz | Preservar imports antigos durante a migração, sem quebrar scripts e atalhos. |
 | CSS único com `?v=` | Evitar cache do navegador sem introduzir pipeline de build. |
+| PolyForm Noncommercial 1.0.0 | Permitir estudo e portfólio sem autorizar uso comercial por terceiros. |
 
 ## 12. Pendências conhecidas
 
