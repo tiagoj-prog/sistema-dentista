@@ -31,3 +31,5 @@ demo/
 .vscode/*.log
 .vscode/*.tmp
 .vscode/*.cache
+# Instrucoes internas de trabalho
+AGENTS.md
