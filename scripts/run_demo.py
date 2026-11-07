@@ -1,12 +1,13 @@
 """Executa a aplicação apontando para o banco de demonstração.
 
-Uso:
-
+Uso local:
     python scripts/run_demo.py
 
-Sobe em http://127.0.0.1:5001, sem usar o banco real.
+Sobe em http://127.0.0.1:5001 por padrão. Em produção (Render, etc.)
+usa a variável de ambiente PORT e escuta em 0.0.0.0.
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -25,8 +26,10 @@ import sistema_dentista.config as config
 
 config.DATABASE_PATH = DEMO_DB
 config.BACKUP_DIR = ROOT / "demo" / "backups"
-config.PORT = 5001
 config.DEBUG = False
+
+porta = int(os.environ.get("PORT", "5001"))
+config.PORT = porta
 
 from sistema_dentista import create_app
 
@@ -34,4 +37,5 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5001, debug=False)
+    host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
+    app.run(host=host, port=porta, debug=False)

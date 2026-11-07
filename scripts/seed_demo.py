@@ -308,14 +308,33 @@ def inserir_dados(conexao):
 
 
 def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Cria o banco de demonstração."
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Recria o banco mesmo que já exista.",
+    )
+    args = parser.parse_args()
+
     if DEMO_DB.resolve() == REAL_DB.resolve():
         raise SystemExit("Destino inválido: o script não pode usar o banco real.")
 
-    if DEMO_DB.exists():
+    if DEMO_DB.exists() and not args.force:
         raise SystemExit(
             f"O arquivo {DEMO_DB} já existe.\n"
-            "Remova a pasta demo/ manualmente se quiser recriar."
+            "Use --force para recriar."
         )
+
+    if DEMO_DB.exists() and args.force:
+        DEMO_DB.unlink()
+        for sufixo in ("-wal", "-shm", "-journal"):
+            extra = DEMO_DB.with_name(DEMO_DB.name + sufixo)
+            if extra.exists():
+                extra.unlink()
 
     DEMO_DIR.mkdir(parents=True, exist_ok=True)
     criar_estrutura()

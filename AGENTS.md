@@ -82,6 +82,8 @@ O sistema utiliza Python, Flask, HTML, CSS, JavaScript e SQLite, organizado em c
 - `sistema_dentista/templates/`: páginas HTML.
 - `sistema_dentista/static/`: CSS (`visual_modern.css`), JavaScript e ícones SVG.
 - `banco.py`, `backup.py`, `pacientes.py`, `consultas.py`, `odontograma.py`, `tratamentos.py`, `agenda_visual.py`, `financeiro.py`: shims de compatibilidade que reexportam o pacote. Não adicione lógica nova neles.
+- `docs/deploy_render.md`: guia passo a passo de hospedagem da demo no Render.
+- `render.yaml` e `runtime.txt`: configuração de deploy da demo.
 - `docs/architecture.md`: arquitetura atual, modelo de dados e pendências.
 - `scripts/seed_demo.py`: cria `demo/dentista_demo.db` com dados fictícios.
 - `scripts/run_demo.py`: executa a aplicação na porta 5001 com o banco de demonstração.

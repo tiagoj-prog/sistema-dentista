@@ -132,7 +132,12 @@ python scripts/run_demo.py
 
 O primeiro comando cria `demo/dentista_demo.db` com pacientes, agenda, odontograma e lançamentos fictícios. O segundo inicia a aplicação em `http://127.0.0.1:5001` usando esse banco.
 
-O arquivo `dentista.db` não é lido nem alterado por esses scripts. A pasta `demo/` é ignorada pelo Git.
+## Demonstração online
+
+A demo também pode ser hospedada gratuitamente no Render para
+compartilhar um link com dentistas. Veja `docs/deploy_render.md`.
+
+A pasta `demo/` é ignorada pelo Git e o banco real nunca é usado.
 
 ## Testes
 
