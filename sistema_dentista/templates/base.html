@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema Dentista{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='visual_modern.css', v=6) }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">Dr. Tiago J. Lima</div>
+    <nav>
+        <a href="/" {% if request.path == '/' %}class="active"{% endif %}>Dashboard</a>
+        <a href="/agenda" {% if request.path.startswith('/agenda') %}class="active"{% endif %}>Agenda</a>
+        <a href="/pacientes" {% if request.path.startswith('/pacientes') %}class="active"{% endif %}>Pacientes</a>
+        <a href="/financeiro" {% if request.path.startswith('/financeiro') %}class="active"{% endif %}>Financeiro</a>
+    </nav>
+</header>
+
+<main class="container">
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria, mensagem in mensagens %}
+            <div class="alert {{ categoria }}">{{ mensagem }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

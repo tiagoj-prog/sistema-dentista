@@ -10,6 +10,7 @@ from datetime import date
 
 from sistema_dentista.database.connection import (
     criar_banco,
+    criar_indices,
 )
 
 from .repositories.patients_repository import (
@@ -99,6 +100,15 @@ def create_flask_app():
         static_url_path="/static"
     )
     app.secret_key = SECRET_KEY
+
+    @app.errorhandler(404)
+    def pagina_nao_encontrada(erro):
+        return render_template("404.html"), 404
+
+    @app.errorhandler(500)
+    def erro_interno(erro):
+        app.logger.exception("Erro interno: %s", erro)
+        return render_template("500.html"), 500
 
     
     # =========================================
@@ -883,7 +893,10 @@ def create_flask_app():
                 observacao
             )
         except Exception as erro:
-            print(f"Erro ao salvar odontograma: {erro}")
+            app.logger.exception(
+                "Erro ao salvar odontograma: %s",
+                erro,
+            )
             return {
                 "sucesso": False,
                 "erro": "Não foi possível salvar o odontograma."
@@ -1575,6 +1588,7 @@ def create_flask_app():
 
 def initialize_database():
     criar_banco()
+    criar_indices()
     criar_tabelas_conta_paciente()
     criar_tabela_odontograma()
     criar_tabelas_contas_individuais()

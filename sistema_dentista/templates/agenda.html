@@ -1,18 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-    <title>Agenda</title>
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='visual_modern.css', v=6) }}"
-    >
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
+{% extends "base.html" %}
 
+{% block title %}Agenda{% endblock %}
+
+{% block head_extra %}
 <style id="paleta-clinica-sincronizada">
 :root {
     --pc-limpeza-bg: #f3f4f6;
@@ -483,540 +473,9 @@
     display: block;
 }
 </style>
+{% endblock %}
 
-</head>
-<body>
-
-<header class="topbar">
-    <div class="logo">Dr. Tiago J. Lima</div>
-
-    <nav>
-        <a href="/">Dashboard</a>
-        <a href="/agenda" class="active">Agenda</a>
-        <a href="/pacientes">Pacientes</a>
-        <a href="/financeiro">Financeiro</a>
-    </nav>
-</header>
-
-<main class="container agenda-visual-page">
-
-    <div class="page-header agenda-page-header">
-        <div>
-            <h1>Agenda</h1>
-            <p>
-                Agenda independente. Você pode selecionar um paciente
-                cadastrado para preencher o telefone automaticamente
-                ou digitar qualquer pessoa manualmente.
-            </p>
-        </div>
-
-        <button
-            type="button"
-            class="button primary"
-            onclick="abrirNovoEvento()"
-        >
-            + Novo agendamento
-        </button>
-    </div>
-
-    {% with mensagens = get_flashed_messages(with_categories=true) %}
-        {% for categoria, mensagem in mensagens %}
-            <div class="alert {{ categoria }}">
-                {{ mensagem }}
-            </div>
-        {% endfor %}
-    {% endwith %}
-
-    <section class="agenda-toolbar">
-        <div class="agenda-navigation">
-            <a
-                class="agenda-nav-button"
-                href="{{ url_for('agenda', semana=agenda.anterior) }}"
-                aria-label="Semana anterior"
-            >
-                ‹
-            </a>
-
-            <a
-                class="agenda-today-button"
-                href="{{ url_for('agenda') }}"
-            >
-                Hoje
-            </a>
-
-            <a
-                class="agenda-nav-button"
-                href="{{ url_for('agenda', semana=agenda.proxima) }}"
-                aria-label="Próxima semana"
-            >
-                ›
-            </a>
-        </div>
-
-        <strong class="agenda-period">
-            {{ agenda.titulo }}
-        </strong>
-
-        <div class="agenda-legend">
-            <span><i class="legend-dot confirmado"></i> Confirmado</span>
-            <span><i class="legend-dot agendado"></i> Agendado</span>
-            <span><i class="legend-dot concluido"></i> Concluído</span>
-        </div>
-    </section>
-
-
-    <section class="procedure-color-legend">
-        <strong>Legenda das cores (opcional)</strong>
-        <div class="procedure-color-legend-items">
-            <span><i class="procedure-color-dot pc-limpeza"></i>Limpeza</span>
-            <span><i class="procedure-color-dot pc-restauracao"></i>Restauração</span>
-            <span><i class="procedure-color-dot pc-manutencao"></i>Manutenção</span>
-            <span><i class="procedure-color-dot pc-implante"></i>Implante</span>
-            <span><i class="procedure-color-dot pc-extracao"></i>Extração</span>
-            <span><i class="procedure-color-dot pc-canal"></i>Canal</span>
-            <span><i class="procedure-color-dot pc-protese"></i>Prótese</span>
-            <span><i class="procedure-color-dot pc-ortodontia"></i>Ortodontia</span>
-            <span><i class="procedure-color-dot pc-avaliacao"></i>Avaliação</span>
-            <span><i class="procedure-color-dot pc-retorno"></i>Retorno</span>
-        </div>
-    </section>
-
-    <section class="weekly-calendar">
-
-        <div class="calendar-header">
-            <div class="calendar-time-head"></div>
-
-            {% for dia in agenda.dias %}
-                <div
-                    class="calendar-day-head {% if dia.hoje %}today{% endif %}"
-                >
-                    <span>{{ dia.nome }}</span>
-                    <strong>{{ dia.dia }}</strong>
-                </div>
-            {% endfor %}
-        </div>
-
-        <div class="calendar-body">
-
-            <div class="calendar-time-axis">
-                {% for horario in agenda.horarios[:-1] %}
-                    <div class="calendar-time-label">
-                        {% if horario.endswith(':00') %}
-                            {{ horario }}
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            </div>
-
-            {% for dia in agenda.dias %}
-                <div
-                    class="calendar-day-column {% if dia.hoje %}today{% endif %}"
-                    data-date="{{ dia.data }}"
-                >
-                    {% for horario in agenda.horarios[:-1] %}
-                        <button
-                            type="button"
-                            class="calendar-slot"
-                            data-date="{{ dia.data }}"
-                            data-time="{{ horario }}"
-                            onclick="abrirNovoEvento(
-                                this.dataset.date,
-                                this.dataset.time
-                            )"
-                            aria-label="Agendar {{ dia.data }} {{ horario }}"
-                        ></button>
-                    {% endfor %}
-
-                    {% for evento in dia.eventos %}
-                        <button
-                            type="button"
-                            class="
-                                calendar-event
-                                event-{{ evento['cor'] }}
-                                status-{{ evento['status']|lower|replace('í','i')|replace(' ', '-') }}
-                            "
-                            data-top="{{ evento['top'] }}"
-                            data-height="{{ evento['altura'] }}"
-                            data-id="{{ evento['id'] }}"
-                            data-nome="{{ evento['nome']|e }}"
-                            data-telefone="{{ evento['telefone']|e }}"
-                            data-titulo="{{ evento['titulo']|e }}"
-                            data-data="{{ evento['data'] }}"
-                            data-inicio="{{ evento['hora_inicio'] }}"
-                            data-fim="{{ evento['hora_fim'] }}"
-                            data-status="{{ evento['status'] }}"
-                            data-observacao="{{ evento['observacao']|e }}"
-                            onclick="abrirEvento(this)"
-                        >
-                            <span class="event-time">
-                                {{ evento["hora_inicio"] }}
-                            </span>
-                            <strong>{{ evento["nome"] }}</strong>
-                            <small>{{ evento["titulo"] }}</small>
-                        </button>
-                    {% endfor %}
-                </div>
-            {% endfor %}
-
-        </div>
-    </section>
-
-</main>
-
-
-<!-- NOVO AGENDAMENTO -->
-<div
-    class="agenda-modal-backdrop"
-    id="novoEventoModal"
-    onclick="fecharModalFundo(event, 'novoEventoModal')"
->
-    <section class="agenda-modal">
-        <div class="agenda-modal-header">
-            <div>
-                <span class="modal-kicker">Agenda</span>
-                <h2>Novo agendamento</h2>
-            </div>
-
-            <button
-                type="button"
-                class="modal-close"
-                onclick="fecharModal('novoEventoModal')"
-            >
-                ×
-            </button>
-        </div>
-
-        <form
-            action="{{ url_for('adicionar_evento_agenda_web') }}"
-            method="POST"
-            class="agenda-event-form"
-            autocomplete="off"
-        >
-            <div class="form-grid two agenda-form-grid">
-                <div class="form-group agenda-patient-search">
-                    <label>Nome</label>
-                    <input
-                        type="text"
-                        name="nome"
-                        id="agendaPacienteNome"
-                        placeholder="Digite o nome ou telefone"
-                        autocomplete="off"
-                        aria-autocomplete="list"
-                        aria-controls="agendaPacienteSugestoes"
-                        required
-                    >
-
-                    <div
-                        id="agendaPacienteSugestoes"
-                        class="agenda-patient-suggestions"
-                        role="listbox"
-                    >
-                        {% for paciente in pacientes %}
-                            <button
-                                type="button"
-                                class="agenda-patient-option"
-                                data-nome="{{ paciente['nome']|e }}"
-                                data-telefone="{{ (paciente['telefone'] or '')|e }}"
-                                role="option"
-                            >
-                                <span>
-                                    <strong>{{ paciente["nome"] }}</strong>
-                                    <small>
-                                        {{ paciente["telefone"] or "Sem telefone cadastrado" }}
-                                    </small>
-                                </span>
-                                <span class="agenda-patient-option-mark">
-                                    Usar cadastro
-                                </span>
-                            </button>
-                        {% endfor %}
-
-                        <div
-                            id="agendaPacienteSemResultado"
-                            class="agenda-patient-empty"
-                        >
-                            Nenhum paciente cadastrado encontrado.
-                            Você pode continuar digitando normalmente.
-                        </div>
-                    </div>
-
-                    <small
-                        id="agendaPacienteSelecionado"
-                        class="agenda-patient-selected"
-                    ></small>
-                </div>
-
-                <div class="form-group">
-                    <label>Telefone</label>
-                    <input
-                        type="tel"
-                        name="telefone"
-                        id="agendaPacienteTelefone"
-                        placeholder="Opcional"
-                        autocomplete="off"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label>Título</label>
-                    <input
-                        type="text"
-                        name="titulo"
-                        id="agendaTitulo"
-                        value="Consulta"
-                        list="procedimentosAgenda"
-                        placeholder="Consulta, retorno, restauração..."
-                        autocomplete="off"
-                        required
-                    >
-
-                    <datalist id="procedimentosAgenda">
-                        <option value="Limpeza"></option>
-                        <option value="Restauração"></option>
-                        <option value="Manutenção"></option>
-                        <option value="Implante"></option>
-                        <option value="Extração"></option>
-                        <option value="Canal"></option>
-                        <option value="Prótese"></option>
-                        <option value="Ortodontia"></option>
-                        <option value="Avaliação"></option>
-                        <option value="Retorno"></option>
-                        <option value="Consulta"></option>
-                    </datalist>
-                </div>
-
-                <div class="form-group">
-                    <label>Data</label>
-                    <input
-                        type="date"
-                        name="data"
-                        id="agendaData"
-                        required
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label>Início</label>
-
-                    <div class="time-select-group">
-                        <select
-                            name="hora_inicio_h"
-                            id="agendaInicioHora"
-                            required
-                        >
-                            <option value="">-- h</option>
-                            {% for hora in range(9, 19) %}
-                                <option value="{{ '%02d'|format(hora) }}">
-                                    {{ '%02d'|format(hora) }} h
-                                </option>
-                            {% endfor %}
-                        </select>
-
-                        <span>:</span>
-
-                        <select
-                            name="hora_inicio_m"
-                            id="agendaInicioMinuto"
-                            required
-                        >
-                            <option value="">-- min</option>
-                            <option value="00">00 min</option>
-                            <option value="30">30 min</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Fim</label>
-
-                    <div class="time-select-group">
-                        <select
-                            name="hora_fim_h"
-                            id="agendaFimHora"
-                            required
-                        >
-                            <option value="">-- h</option>
-                            {% for hora in range(9, 20) %}
-                                <option value="{{ '%02d'|format(hora) }}">
-                                    {{ '%02d'|format(hora) }} h
-                                </option>
-                            {% endfor %}
-                        </select>
-
-                        <span>:</span>
-
-                        <select
-                            name="hora_fim_m"
-                            id="agendaFimMinuto"
-                            required
-                        >
-                            <option value="">-- min</option>
-                            <option value="00">00 min</option>
-                            <option value="30">30 min</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group full">
-                    <label>Observação</label>
-                    <textarea
-                        name="observacao"
-                        rows="3"
-                        placeholder="Observação opcional..."
-                    ></textarea>
-                </div>
-
-                <div class="form-group full">
-                    <label>Cor do agendamento <small>(opcional)</small></label>
-
-                    {% set procedimentos_cores = [
-                        ("sem-cor", "Sem cor"),
-                        ("limpeza", "Limpeza"),
-                        ("restauracao", "Restauração"),
-                        ("manutencao", "Manutenção"),
-                        ("implante", "Implante"),
-                        ("extracao", "Extração"),
-                        ("canal", "Canal"),
-                        ("protese", "Prótese"),
-                        ("ortodontia", "Ortodontia"),
-                        ("avaliacao", "Avaliação"),
-                        ("retorno", "Retorno")
-                    ] %}
-
-                    <div class="agenda-color-picker agenda-procedure-picker">
-                        {% for cor, procedimento in procedimentos_cores %}
-                            <label
-                                class="agenda-procedure-option"
-                                title="{{ procedimento }}"
-                            >
-                                <input
-                                    type="radio"
-                                    name="cor"
-                                    value="{{ cor }}"
-                                    data-procedimento="{{ procedimento }}"
-                                    {% if cor == "sem-cor" %}checked{% endif %}
-                                >
-                                <span class="procedure-swatch pc-{{ cor }}"></span>
-                                <small>{{ procedimento }}</small>
-                            </label>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-actions">
-                <button
-                    type="button"
-                    class="button secondary-button"
-                    onclick="fecharModal('novoEventoModal')"
-                >
-                    Cancelar
-                </button>
-
-                <button
-                    type="submit"
-                    class="button primary"
-                >
-                    Salvar agendamento
-                </button>
-            </div>
-        </form>
-    </section>
-</div>
-
-
-<!-- DETALHES -->
-<div
-    class="agenda-modal-backdrop"
-    id="eventoModal"
-    onclick="fecharModalFundo(event, 'eventoModal')"
->
-    <section class="agenda-modal event-details-modal">
-        <div class="agenda-modal-header">
-            <div>
-                <span class="modal-kicker">Agendamento</span>
-                <h2 id="eventoNome">-</h2>
-            </div>
-
-            <button
-                type="button"
-                class="modal-close"
-                onclick="fecharModal('eventoModal')"
-            >
-                ×
-            </button>
-        </div>
-
-        <div class="event-detail-grid">
-            <div>
-                <span>Título</span>
-                <strong id="eventoTitulo">-</strong>
-            </div>
-
-            <div>
-                <span>Data</span>
-                <strong id="eventoData">-</strong>
-            </div>
-
-            <div>
-                <span>Horário</span>
-                <strong id="eventoHorario">-</strong>
-            </div>
-
-            <div>
-                <span>Telefone</span>
-                <strong id="eventoTelefone">-</strong>
-            </div>
-
-            <div class="full">
-                <span>Observação</span>
-                <p id="eventoObservacao">-</p>
-            </div>
-        </div>
-
-        <div class="event-status-actions">
-            <a
-                href="#"
-                id="botaoWhatsAppAgenda"
-                class="small-button whatsapp-button"
-                target="_blank"
-                rel="noopener noreferrer"
-                style="display: none;"
-            >
-                 WhatsApp
-            </a>
-            <form method="POST" id="formConfirmar">
-                <button class="small-button confirm" type="submit">
-                    ✓ Confirmar
-                </button>
-            </form>
-
-            <form method="POST" id="formConcluir">
-                <button class="small-button" type="submit">
-                    Concluir
-                </button>
-            </form>
-
-            <form method="POST" id="formCancelar">
-                <button class="small-button cancel" type="submit">
-                    Cancelar
-                </button>
-            </form>
-
-            <form
-                method="POST"
-                id="formExcluirEvento"
-                onsubmit="return confirm('Excluir este agendamento?');"
-            >
-                <button class="delete-button" type="submit">
-                    ️ Excluir
-                </button>
-            </form>
-        </div>
-    </section>
-</div>
-
-
+{% block scripts %}
 <script>
 document.querySelectorAll(".calendar-event").forEach(function (evento) {
     evento.style.top = evento.dataset.top + "px";
@@ -1473,6 +932,519 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 </script>
+{% endblock %}
 
-</body>
-</html>
+{% block content %}
+<div class="page-header agenda-page-header">
+        <div>
+            <h1>Agenda</h1>
+            <p>
+                Agenda independente. Você pode selecionar um paciente
+                cadastrado para preencher o telefone automaticamente
+                ou digitar qualquer pessoa manualmente.
+            </p>
+        </div>
+
+        <button
+            type="button"
+            class="button primary"
+            onclick="abrirNovoEvento()"
+        >
+            + Novo agendamento
+        </button>
+    </div>
+
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria, mensagem in mensagens %}
+            <div class="alert {{ categoria }}">
+                {{ mensagem }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <section class="agenda-toolbar">
+        <div class="agenda-navigation">
+            <a
+                class="agenda-nav-button"
+                href="{{ url_for('agenda', semana=agenda.anterior) }}"
+                aria-label="Semana anterior"
+            >
+                ‹
+            </a>
+
+            <a
+                class="agenda-today-button"
+                href="{{ url_for('agenda') }}"
+            >
+                Hoje
+            </a>
+
+            <a
+                class="agenda-nav-button"
+                href="{{ url_for('agenda', semana=agenda.proxima) }}"
+                aria-label="Próxima semana"
+            >
+                ›
+            </a>
+        </div>
+
+        <strong class="agenda-period">
+            {{ agenda.titulo }}
+        </strong>
+
+        <div class="agenda-legend">
+            <span><i class="legend-dot confirmado"></i> Confirmado</span>
+            <span><i class="legend-dot agendado"></i> Agendado</span>
+            <span><i class="legend-dot concluido"></i> Concluído</span>
+        </div>
+    </section>
+
+
+    <section class="procedure-color-legend">
+        <strong>Legenda das cores (opcional)</strong>
+        <div class="procedure-color-legend-items">
+            <span><i class="procedure-color-dot pc-limpeza"></i>Limpeza</span>
+            <span><i class="procedure-color-dot pc-restauracao"></i>Restauração</span>
+            <span><i class="procedure-color-dot pc-manutencao"></i>Manutenção</span>
+            <span><i class="procedure-color-dot pc-implante"></i>Implante</span>
+            <span><i class="procedure-color-dot pc-extracao"></i>Extração</span>
+            <span><i class="procedure-color-dot pc-canal"></i>Canal</span>
+            <span><i class="procedure-color-dot pc-protese"></i>Prótese</span>
+            <span><i class="procedure-color-dot pc-ortodontia"></i>Ortodontia</span>
+            <span><i class="procedure-color-dot pc-avaliacao"></i>Avaliação</span>
+            <span><i class="procedure-color-dot pc-retorno"></i>Retorno</span>
+        </div>
+    </section>
+
+    <section class="weekly-calendar">
+
+        <div class="calendar-header">
+            <div class="calendar-time-head"></div>
+
+            {% for dia in agenda.dias %}
+                <div
+                    class="calendar-day-head {% if dia.hoje %}today{% endif %}"
+                >
+                    <span>{{ dia.nome }}</span>
+                    <strong>{{ dia.dia }}</strong>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="calendar-body">
+
+            <div class="calendar-time-axis">
+                {% for horario in agenda.horarios[:-1] %}
+                    <div class="calendar-time-label">
+                        {% if horario.endswith(':00') %}
+                            {{ horario }}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% for dia in agenda.dias %}
+                <div
+                    class="calendar-day-column {% if dia.hoje %}today{% endif %}"
+                    data-date="{{ dia.data }}"
+                >
+                    {% for horario in agenda.horarios[:-1] %}
+                        <button
+                            type="button"
+                            class="calendar-slot"
+                            data-date="{{ dia.data }}"
+                            data-time="{{ horario }}"
+                            onclick="abrirNovoEvento(
+                                this.dataset.date,
+                                this.dataset.time
+                            )"
+                            aria-label="Agendar {{ dia.data }} {{ horario }}"
+                        ></button>
+                    {% endfor %}
+
+                    {% for evento in dia.eventos %}
+                        <button
+                            type="button"
+                            class="
+                                calendar-event
+                                event-{{ evento['cor'] }}
+                                status-{{ evento['status']|lower|replace('í','i')|replace(' ', '-') }}
+                            "
+                            data-top="{{ evento['top'] }}"
+                            data-height="{{ evento['altura'] }}"
+                            data-id="{{ evento['id'] }}"
+                            data-nome="{{ evento['nome']|e }}"
+                            data-telefone="{{ evento['telefone']|e }}"
+                            data-titulo="{{ evento['titulo']|e }}"
+                            data-data="{{ evento['data'] }}"
+                            data-inicio="{{ evento['hora_inicio'] }}"
+                            data-fim="{{ evento['hora_fim'] }}"
+                            data-status="{{ evento['status'] }}"
+                            data-observacao="{{ evento['observacao']|e }}"
+                            onclick="abrirEvento(this)"
+                        >
+                            <span class="event-time">
+                                {{ evento["hora_inicio"] }}
+                            </span>
+                            <strong>{{ evento["nome"] }}</strong>
+                            <small>{{ evento["titulo"] }}</small>
+                        </button>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+        </div>
+    </section>
+
+<!-- NOVO AGENDAMENTO -->
+<div
+    class="agenda-modal-backdrop"
+    id="novoEventoModal"
+    onclick="fecharModalFundo(event, 'novoEventoModal')"
+>
+    <section class="agenda-modal">
+        <div class="agenda-modal-header">
+            <div>
+                <span class="modal-kicker">Agenda</span>
+                <h2>Novo agendamento</h2>
+            </div>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="fecharModal('novoEventoModal')"
+            >
+                ×
+            </button>
+        </div>
+
+        <form
+            action="{{ url_for('adicionar_evento_agenda_web') }}"
+            method="POST"
+            class="agenda-event-form"
+            autocomplete="off"
+        >
+            <div class="form-grid two agenda-form-grid">
+                <div class="form-group agenda-patient-search">
+                    <label>Nome</label>
+                    <input
+                        type="text"
+                        name="nome"
+                        id="agendaPacienteNome"
+                        placeholder="Digite o nome ou telefone"
+                        autocomplete="off"
+                        aria-autocomplete="list"
+                        aria-controls="agendaPacienteSugestoes"
+                        required
+                    >
+
+                    <div
+                        id="agendaPacienteSugestoes"
+                        class="agenda-patient-suggestions"
+                        role="listbox"
+                    >
+                        {% for paciente in pacientes %}
+                            <button
+                                type="button"
+                                class="agenda-patient-option"
+                                data-nome="{{ paciente['nome']|e }}"
+                                data-telefone="{{ (paciente['telefone'] or '')|e }}"
+                                role="option"
+                            >
+                                <span>
+                                    <strong>{{ paciente["nome"] }}</strong>
+                                    <small>
+                                        {{ paciente["telefone"] or "Sem telefone cadastrado" }}
+                                    </small>
+                                </span>
+                                <span class="agenda-patient-option-mark">
+                                    Usar cadastro
+                                </span>
+                            </button>
+                        {% endfor %}
+
+                        <div
+                            id="agendaPacienteSemResultado"
+                            class="agenda-patient-empty"
+                        >
+                            Nenhum paciente cadastrado encontrado.
+                            Você pode continuar digitando normalmente.
+                        </div>
+                    </div>
+
+                    <small
+                        id="agendaPacienteSelecionado"
+                        class="agenda-patient-selected"
+                    ></small>
+                </div>
+
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input
+                        type="tel"
+                        name="telefone"
+                        id="agendaPacienteTelefone"
+                        placeholder="Opcional"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Título</label>
+                    <input
+                        type="text"
+                        name="titulo"
+                        id="agendaTitulo"
+                        value="Consulta"
+                        list="procedimentosAgenda"
+                        placeholder="Consulta, retorno, restauração..."
+                        autocomplete="off"
+                        required
+                    >
+
+                    <datalist id="procedimentosAgenda">
+                        <option value="Limpeza"></option>
+                        <option value="Restauração"></option>
+                        <option value="Manutenção"></option>
+                        <option value="Implante"></option>
+                        <option value="Extração"></option>
+                        <option value="Canal"></option>
+                        <option value="Prótese"></option>
+                        <option value="Ortodontia"></option>
+                        <option value="Avaliação"></option>
+                        <option value="Retorno"></option>
+                        <option value="Consulta"></option>
+                    </datalist>
+                </div>
+
+                <div class="form-group">
+                    <label>Data</label>
+                    <input
+                        type="date"
+                        name="data"
+                        id="agendaData"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Início</label>
+
+                    <div class="time-select-group">
+                        <select
+                            name="hora_inicio_h"
+                            id="agendaInicioHora"
+                            required
+                        >
+                            <option value="">-- h</option>
+                            {% for hora in range(9, 19) %}
+                                <option value="{{ '%02d'|format(hora) }}">
+                                    {{ '%02d'|format(hora) }} h
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <span>:</span>
+
+                        <select
+                            name="hora_inicio_m"
+                            id="agendaInicioMinuto"
+                            required
+                        >
+                            <option value="">-- min</option>
+                            <option value="00">00 min</option>
+                            <option value="30">30 min</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Fim</label>
+
+                    <div class="time-select-group">
+                        <select
+                            name="hora_fim_h"
+                            id="agendaFimHora"
+                            required
+                        >
+                            <option value="">-- h</option>
+                            {% for hora in range(9, 20) %}
+                                <option value="{{ '%02d'|format(hora) }}">
+                                    {{ '%02d'|format(hora) }} h
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <span>:</span>
+
+                        <select
+                            name="hora_fim_m"
+                            id="agendaFimMinuto"
+                            required
+                        >
+                            <option value="">-- min</option>
+                            <option value="00">00 min</option>
+                            <option value="30">30 min</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group full">
+                    <label>Observação</label>
+                    <textarea
+                        name="observacao"
+                        rows="3"
+                        placeholder="Observação opcional..."
+                    ></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <label>Cor do agendamento <small>(opcional)</small></label>
+
+                    {% set procedimentos_cores = [
+                        ("sem-cor", "Sem cor"),
+                        ("limpeza", "Limpeza"),
+                        ("restauracao", "Restauração"),
+                        ("manutencao", "Manutenção"),
+                        ("implante", "Implante"),
+                        ("extracao", "Extração"),
+                        ("canal", "Canal"),
+                        ("protese", "Prótese"),
+                        ("ortodontia", "Ortodontia"),
+                        ("avaliacao", "Avaliação"),
+                        ("retorno", "Retorno")
+                    ] %}
+
+                    <div class="agenda-color-picker agenda-procedure-picker">
+                        {% for cor, procedimento in procedimentos_cores %}
+                            <label
+                                class="agenda-procedure-option"
+                                title="{{ procedimento }}"
+                            >
+                                <input
+                                    type="radio"
+                                    name="cor"
+                                    value="{{ cor }}"
+                                    data-procedimento="{{ procedimento }}"
+                                    {% if cor == "sem-cor" %}checked{% endif %}
+                                >
+                                <span class="procedure-swatch pc-{{ cor }}"></span>
+                                <small>{{ procedimento }}</small>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button
+                    type="button"
+                    class="button secondary-button"
+                    onclick="fecharModal('novoEventoModal')"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="button primary"
+                >
+                    Salvar agendamento
+                </button>
+            </div>
+        </form>
+    </section>
+</div>
+
+
+<!-- DETALHES -->
+<div
+    class="agenda-modal-backdrop"
+    id="eventoModal"
+    onclick="fecharModalFundo(event, 'eventoModal')"
+>
+    <section class="agenda-modal event-details-modal">
+        <div class="agenda-modal-header">
+            <div>
+                <span class="modal-kicker">Agendamento</span>
+                <h2 id="eventoNome">-</h2>
+            </div>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="fecharModal('eventoModal')"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="event-detail-grid">
+            <div>
+                <span>Título</span>
+                <strong id="eventoTitulo">-</strong>
+            </div>
+
+            <div>
+                <span>Data</span>
+                <strong id="eventoData">-</strong>
+            </div>
+
+            <div>
+                <span>Horário</span>
+                <strong id="eventoHorario">-</strong>
+            </div>
+
+            <div>
+                <span>Telefone</span>
+                <strong id="eventoTelefone">-</strong>
+            </div>
+
+            <div class="full">
+                <span>Observação</span>
+                <p id="eventoObservacao">-</p>
+            </div>
+        </div>
+
+        <div class="event-status-actions">
+            <a
+                href="#"
+                id="botaoWhatsAppAgenda"
+                class="small-button whatsapp-button"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="display: none;"
+            >
+                 WhatsApp
+            </a>
+            <form method="POST" id="formConfirmar">
+                <button class="small-button confirm" type="submit">
+                    ✓ Confirmar
+                </button>
+            </form>
+
+            <form method="POST" id="formConcluir">
+                <button class="small-button" type="submit">
+                    Concluir
+                </button>
+            </form>
+
+            <form method="POST" id="formCancelar">
+                <button class="small-button cancel" type="submit">
+                    Cancelar
+                </button>
+            </form>
+
+            <form
+                method="POST"
+                id="formExcluirEvento"
+                onsubmit="return confirm('Excluir este agendamento?');"
+            >
+                <button class="delete-button" type="submit">
+                    ️ Excluir
+                </button>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

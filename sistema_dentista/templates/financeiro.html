@@ -1,26 +1,97 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financeiro</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='visual_modern.css', v=6) }}">
+{% extends "base.html" %}
+
+{% block title %}Financeiro{% endblock %}
+
+{% block scripts %}
     <script src="{{ url_for('static', filename='app.js') }}"></script>
-</head>
-<body>
+    <script src="{{ url_for('static', filename='mostrar_mais.js') }}"></script>
+    <script>
+function abrirAbaFinanceiro(nome, botao) {
+    document
+        .querySelectorAll(".finance-tab-panel")
+        .forEach(function (painel) {
+            painel.classList.remove("active");
+        });
 
-<header class="topbar">
-    <div class="logo">Dr. Tiago J. Lima</div>
+    document
+        .querySelectorAll(".finance-tab-button")
+        .forEach(function (item) {
+            item.classList.remove("active");
+        });
 
-    <nav>
-        <a href="/">Dashboard</a>
-        <a href="/agenda">Agenda</a>
-        <a href="/pacientes">Pacientes</a>
-        <a href="/financeiro" class="active">Financeiro</a>
-    </nav>
-</header>
+    const painel = document.getElementById(
+        "finance-tab-" + nome
+    );
 
-<main class="container">
+    if (painel) {
+        painel.classList.add("active");
+    }
+
+    if (botao) {
+        botao.classList.add("active");
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("aba", nome);
+    window.history.replaceState({}, "", url);
+}
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const parametros = new URLSearchParams(
+        window.location.search
+    );
+
+    const aba = parametros.get("aba") || "geral";
+
+    const botao = document.querySelector(
+        '[data-finance-tab="' + aba + '"]'
+    );
+
+    if (botao) {
+        abrirAbaFinanceiro(
+            aba,
+            botao
+        );
+    }
+});
+
+
+function ajustarRecorrencia() {
+    const recorrencia = document.getElementById("recorrencia").value;
+    const grupoMes = document.getElementById("grupo-mes-vencimento");
+    const mes = document.getElementById("mes-vencimento");
+
+    if (recorrencia === "Anual") {
+        grupoMes.style.display = "flex";
+        mes.required = true;
+    } else {
+        grupoMes.style.display = "none";
+        mes.required = false;
+    }
+}
+
+ajustarRecorrencia();
+    </script>
+    <script>
+        document.querySelectorAll(
+            ".monthly-bar-fill[data-largura]"
+        ).forEach(function (barra) {
+
+            const largura = parseFloat(
+                barra.dataset.largura
+            ) || 0;
+
+            barra.style.width =
+                Math.max(
+                    0,
+                    Math.min(100, largura)
+                ) + "%";
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
 
     <div class="page-header">
         <div>
@@ -28,12 +99,6 @@
             <p>Fluxo de caixa, contas, orçamentos e análise de gastos.</p>
         </div>
     </div>
-
-    {% with mensagens = get_flashed_messages(with_categories=true) %}
-        {% for categoria, mensagem in mensagens %}
-            <div class="alert {{ categoria }}">{{ mensagem }}</div>
-        {% endfor %}
-    {% endwith %}
 
     <div class="finance-tabs">
         <button
@@ -762,7 +827,7 @@
                         <div class="monthly-bar-track">
                             <div
                                 class="monthly-bar-fill"
-                               data-largura="{{ largura_barra }}"
+                                data-largura="{{ largura_barra }}"
                             ></div>
                         </div>
 
@@ -859,96 +924,4 @@
         </section>
     </div>
 
-</main>
-
-
-<script>
-
-function abrirAbaFinanceiro(nome, botao) {
-    document
-        .querySelectorAll(".finance-tab-panel")
-        .forEach(function (painel) {
-            painel.classList.remove("active");
-        });
-
-    document
-        .querySelectorAll(".finance-tab-button")
-        .forEach(function (item) {
-            item.classList.remove("active");
-        });
-
-    const painel = document.getElementById(
-        "finance-tab-" + nome
-    );
-
-    if (painel) {
-        painel.classList.add("active");
-    }
-
-    if (botao) {
-        botao.classList.add("active");
-    }
-
-    const url = new URL(window.location.href);
-    url.searchParams.set("aba", nome);
-    window.history.replaceState({}, "", url);
-}
-
-
-document.addEventListener("DOMContentLoaded", function () {
-    const parametros = new URLSearchParams(
-        window.location.search
-    );
-
-    const aba = parametros.get("aba") || "geral";
-
-    const botao = document.querySelector(
-        '[data-finance-tab="' + aba + '"]'
-    );
-
-    if (botao) {
-        abrirAbaFinanceiro(
-            aba,
-            botao
-        );
-    }
-});
-
-
-function ajustarRecorrencia() {
-    const recorrencia = document.getElementById("recorrencia").value;
-    const grupoMes = document.getElementById("grupo-mes-vencimento");
-    const mes = document.getElementById("mes-vencimento");
-
-    if (recorrencia === "Anual") {
-        grupoMes.style.display = "flex";
-        mes.required = true;
-    } else {
-        grupoMes.style.display = "none";
-        mes.required = false;
-    }
-}
-
-ajustarRecorrencia();
-</script>
-
-
-<script src="{{ url_for('static', filename='mostrar_mais.js') }}"></script>
-<script>
-    document.querySelectorAll(
-        ".monthly-bar-fill[data-largura]"
-    ).forEach(function (barra) {
-
-        const largura = parseFloat(
-            barra.dataset.largura
-        ) || 0;
-
-        barra.style.width =
-            Math.max(
-                0,
-                Math.min(100, largura)
-            ) + "%";
-    });
-</script>
-</body>
-</html>
+{% endblock %}

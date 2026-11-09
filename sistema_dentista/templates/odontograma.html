@@ -1,19 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-    <title>Odontograma</title>
+{% extends "base.html" %}
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='visual_modern.css', v=6) }}"
-    >
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
+{% block title %}Odontograma{% endblock %}
 
+{% block head_extra %}
 <style id="paleta-clinica-sincronizada">
 :root {
     --pc-limpeza-bg: #f3f4f6;
@@ -415,24 +404,342 @@ a borda deixa mais claro que "Dente inteiro" está ativo.
     border-radius: 9px 0 0 9px !important;
 }
 </style>
+{% endblock %}
 
-</head>
-<body>
+{% block scripts %}
+<script>
+const odontogramaDados = JSON.parse('{{ odontograma | tojson | safe }}');
+const facesDados = JSON.parse('{{ faces | tojson | safe }}');
 
-<header class="topbar">
-    <div class="logo">Dr. Tiago J. Lima</div>
+const urlSalvarDente =
+    "{{ url_for('salvar_odontograma', paciente_id=paciente['id']) }}";
 
-    <nav>
-        <a href="/">Dashboard</a>
-        <a href="/agenda">Agenda</a>
-        <a href="/pacientes" class="active">Pacientes</a>
-        <a href="/financeiro">Financeiro</a>
-    </nav>
-</header>
+const urlSalvarFace =
+    "{{ url_for('salvar_face_odontograma_web', paciente_id=paciente['id']) }}";
 
-<main class="container odontogram-quadrant-page">
+let denteAtual = null;
+let faceAtual = null;
 
-    <div class="page-header">
+function normalizarEstado(estado) {
+    return "estado-" + String(estado || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, "-");
+}
+
+const classesEstados = [
+    "estado-limpeza",
+    "estado-restauracao",
+    "estado-manutencao",
+    "estado-implante",
+    "estado-carie",
+    "estado-ausente",
+    "estado-extracao",
+    "estado-canal",
+    "estado-protese",
+    "estado-fraturado",
+    // compatibilidade visual temporária
+    "estado-restaurado",
+    "estado-extracao-indicada",
+    "estado-saudavel"
+];
+
+function trocarDenticao(id, botao) {
+    document.querySelectorAll(
+        ".odontogram-quadrant-dentition"
+    ).forEach(function (item) {
+        item.classList.remove("active");
+    });
+
+    document.querySelectorAll(
+        ".odontogram-quadrant-tab"
+    ).forEach(function (item) {
+        item.classList.remove("active");
+    });
+
+    document.getElementById(id).classList.add("active");
+    botao.classList.add("active");
+}
+
+function inferirArcada(numero) {
+    const n = parseInt(numero, 10);
+
+    if (n >= 11 && n <= 18) return "Quadrante 1";
+    if (n >= 21 && n <= 28) return "Quadrante 2";
+    if (n >= 31 && n <= 38) return "Quadrante 3";
+    if (n >= 41 && n <= 48) return "Quadrante 4";
+    if (n >= 51 && n <= 55) return "Decíduo superior direito";
+    if (n >= 61 && n <= 65) return "Decíduo superior esquerdo";
+    if (n >= 71 && n <= 75) return "Decíduo inferior esquerdo";
+    if (n >= 81 && n <= 85) return "Decíduo inferior direito";
+    return "—";
+}
+
+function atualizarPainel() {
+    const dados = odontogramaDados[denteAtual] || {};
+
+    document.getElementById("panelDente").textContent =
+        denteAtual || "—";
+
+    document.getElementById("panelFace").textContent =
+        faceAtual || "Dente inteiro";
+
+    document.getElementById("panelArcada").textContent =
+        dados.arcada || (denteAtual ? inferirArcada(denteAtual) : "—");
+
+    let estadoAtual = dados.estado || "Sem marcação";
+
+    if (faceAtual && faceAtual !== "Dente inteiro") {
+        const chave = denteAtual + "|" + faceAtual;
+
+        if (facesDados[chave]) {
+            estadoAtual = facesDados[chave];
+        }
+    }
+
+    document.getElementById("panelEstado").textContent =
+        estadoAtual;
+
+    document.getElementById("panelAtualizado").textContent =
+        dados.atualizado_em || "—";
+
+    document.getElementById("observacao").value =
+        dados.observacao || "";
+
+    document.getElementById("registroDente").value =
+        denteAtual || "";
+
+    document.getElementById("registroFace").value =
+        faceAtual || "";
+
+    document.getElementById("registroSelecao").textContent =
+        denteAtual
+            ? "Dente " + denteAtual + " — " + (faceAtual || "selecione a face")
+            : "Selecione o dente inteiro ou uma face acima";
+}
+
+function selecionarDente(numero) {
+    denteAtual = String(numero);
+
+    /*
+    O desenho anatômico do dente passa a funcionar
+    como uma face própria.
+    */
+    faceAtual = "Dente inteiro";
+
+    document.querySelectorAll(
+        ".odonto-q-tooth"
+    ).forEach(function (item) {
+        item.classList.remove("selected");
+    });
+
+    document.querySelectorAll(
+        ".odonto-q-face"
+    ).forEach(function (item) {
+        item.classList.remove("selected");
+    });
+
+    document.getElementById("dente-" + denteAtual)?.classList.add("selected");
+    atualizarPainel();
+}
+
+function selecionarFace(dente, face, elemento) {
+    denteAtual = String(dente);
+    faceAtual = face;
+
+    document.querySelectorAll(
+        ".odonto-q-face"
+    ).forEach(function (item) {
+        item.classList.remove("selected");
+    });
+
+    document.querySelectorAll(
+        ".odonto-q-tooth"
+    ).forEach(function (item) {
+        item.classList.remove("selected");
+    });
+
+    elemento.classList.add("selected");
+    document.getElementById("dente-" + denteAtual)?.classList.add("selected");
+
+    atualizarPainel();
+}
+
+async function salvarDenteInteiro(estado) {
+    const resposta = await fetch(
+        urlSalvarDente,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                dente: denteAtual,
+                estado: estado,
+                observacao: document.getElementById("observacao").value
+            })
+        }
+    );
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+        throw new Error(dados.erro || "Não foi possível salvar.");
+    }
+
+    return dados;
+}
+
+async function salvarFace(estado) {
+    const resposta = await fetch(
+        urlSalvarFace,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                dente: denteAtual,
+                face: faceAtual,
+                estado: estado
+            })
+        }
+    );
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+        throw new Error(dados.erro || "Não foi possível salvar a face.");
+    }
+
+    return dados;
+}
+
+function limparClasses(elemento) {
+    if (!elemento) return;
+    classesEstados.forEach(function (classe) {
+        elemento.classList.remove(classe);
+    });
+}
+
+async function aplicarEstado(estado) {
+    if (!denteAtual) {
+        alert("Selecione um dente primeiro.");
+        return;
+    }
+
+    try {
+        if (faceAtual && faceAtual !== "Dente inteiro") {
+            await salvarFace(estado);
+
+            const chave = denteAtual + "|" + faceAtual;
+
+            const zona = document.querySelector(
+                '.odonto-q-face[data-dente="' +
+                denteAtual +
+                '"][data-face="' +
+                faceAtual +
+                '"]'
+            );
+
+            limparClasses(zona);
+
+            if (estado === "Limpar") {
+                delete facesDados[chave];
+            } else {
+                facesDados[chave] = estado;
+                zona?.classList.add(normalizarEstado(estado));
+            }
+
+        } else {
+            const dados = await salvarDenteInteiro(estado);
+
+            const dente = document.getElementById("dente-" + denteAtual);
+
+            limparClasses(dente);
+
+            if (estado === "Limpar") {
+                delete odontogramaDados[denteAtual];
+            } else {
+                odontogramaDados[denteAtual] = {
+                    ...(odontogramaDados[denteAtual] || {}),
+                    estado: dados.estado || estado,
+                    observacao: dados.observacao || document.getElementById("observacao").value
+                };
+                dente?.classList.add(normalizarEstado(estado));
+            }
+        }
+
+        atualizarPainel();
+        mostrarStatus("Informação salva.");
+
+    } catch (erro) {
+        mostrarStatus(erro.message, true);
+    }
+}
+
+async function salvarObservacao() {
+    if (!denteAtual) {
+        alert("Selecione um dente primeiro.");
+        return;
+    }
+
+    const estado =
+        odontogramaDados[denteAtual]?.estado || "Limpeza";
+
+    try {
+        const dados = await salvarDenteInteiro(estado);
+
+        odontogramaDados[denteAtual] = {
+            ...(odontogramaDados[denteAtual] || {}),
+            estado: dados.estado || estado,
+            observacao: document.getElementById("observacao").value
+        };
+
+        atualizarPainel();
+        mostrarStatus("Observação salva.");
+
+    } catch (erro) {
+        mostrarStatus(erro.message, true);
+    }
+}
+
+function mostrarStatus(mensagem, erro = false) {
+    const elemento =
+        document.getElementById("odontoStatus");
+
+    elemento.textContent = mensagem;
+    elemento.classList.toggle("erro", erro);
+
+    clearTimeout(mostrarStatus.timer);
+
+    mostrarStatus.timer = setTimeout(
+        function () {
+            elemento.textContent = "";
+        },
+        2600
+    );
+}
+
+document
+    .getElementById("formRegistroOdonto")
+    .addEventListener(
+        "submit",
+        function (evento) {
+            if (!denteAtual || !faceAtual) {
+                evento.preventDefault();
+                alert(
+                    "Selecione o dente inteiro ou uma face antes de adicionar o registro."
+                );
+            }
+        }
+    );
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
         <div>
             <a
                 href="{{ url_for('perfil_paciente', paciente_id=paciente['id']) }}"
@@ -1332,337 +1639,5 @@ a borda deixa mais claro que "Dente inteiro" está ativo.
         {% endif %}
     </section>
 
-</main>
 
-<script>
-const odontogramaDados = JSON.parse('{{ odontograma | tojson | safe }}');
-const facesDados = JSON.parse('{{ faces | tojson | safe }}');
-
-const urlSalvarDente =
-    "{{ url_for('salvar_odontograma', paciente_id=paciente['id']) }}";
-
-const urlSalvarFace =
-    "{{ url_for('salvar_face_odontograma_web', paciente_id=paciente['id']) }}";
-
-let denteAtual = null;
-let faceAtual = null;
-
-function normalizarEstado(estado) {
-    return "estado-" + String(estado || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/\s+/g, "-");
-}
-
-const classesEstados = [
-    "estado-limpeza",
-    "estado-restauracao",
-    "estado-manutencao",
-    "estado-implante",
-    "estado-carie",
-    "estado-ausente",
-    "estado-extracao",
-    "estado-canal",
-    "estado-protese",
-    "estado-fraturado",
-    // compatibilidade visual temporária
-    "estado-restaurado",
-    "estado-extracao-indicada",
-    "estado-saudavel"
-];
-
-function trocarDenticao(id, botao) {
-    document.querySelectorAll(
-        ".odontogram-quadrant-dentition"
-    ).forEach(function (item) {
-        item.classList.remove("active");
-    });
-
-    document.querySelectorAll(
-        ".odontogram-quadrant-tab"
-    ).forEach(function (item) {
-        item.classList.remove("active");
-    });
-
-    document.getElementById(id).classList.add("active");
-    botao.classList.add("active");
-}
-
-function inferirArcada(numero) {
-    const n = parseInt(numero, 10);
-
-    if (n >= 11 && n <= 18) return "Quadrante 1";
-    if (n >= 21 && n <= 28) return "Quadrante 2";
-    if (n >= 31 && n <= 38) return "Quadrante 3";
-    if (n >= 41 && n <= 48) return "Quadrante 4";
-    if (n >= 51 && n <= 55) return "Decíduo superior direito";
-    if (n >= 61 && n <= 65) return "Decíduo superior esquerdo";
-    if (n >= 71 && n <= 75) return "Decíduo inferior esquerdo";
-    if (n >= 81 && n <= 85) return "Decíduo inferior direito";
-    return "—";
-}
-
-function atualizarPainel() {
-    const dados = odontogramaDados[denteAtual] || {};
-
-    document.getElementById("panelDente").textContent =
-        denteAtual || "—";
-
-    document.getElementById("panelFace").textContent =
-        faceAtual || "Dente inteiro";
-
-    document.getElementById("panelArcada").textContent =
-        dados.arcada || (denteAtual ? inferirArcada(denteAtual) : "—");
-
-    let estadoAtual = dados.estado || "Sem marcação";
-
-    if (faceAtual && faceAtual !== "Dente inteiro") {
-        const chave = denteAtual + "|" + faceAtual;
-
-        if (facesDados[chave]) {
-            estadoAtual = facesDados[chave];
-        }
-    }
-
-    document.getElementById("panelEstado").textContent =
-        estadoAtual;
-
-    document.getElementById("panelAtualizado").textContent =
-        dados.atualizado_em || "—";
-
-    document.getElementById("observacao").value =
-        dados.observacao || "";
-
-    document.getElementById("registroDente").value =
-        denteAtual || "";
-
-    document.getElementById("registroFace").value =
-        faceAtual || "";
-
-    document.getElementById("registroSelecao").textContent =
-        denteAtual
-            ? "Dente " + denteAtual + " — " + (faceAtual || "selecione a face")
-            : "Selecione o dente inteiro ou uma face acima";
-}
-
-function selecionarDente(numero) {
-    denteAtual = String(numero);
-
-    /*
-    O desenho anatômico do dente passa a funcionar
-    como uma face própria.
-    */
-    faceAtual = "Dente inteiro";
-
-    document.querySelectorAll(
-        ".odonto-q-tooth"
-    ).forEach(function (item) {
-        item.classList.remove("selected");
-    });
-
-    document.querySelectorAll(
-        ".odonto-q-face"
-    ).forEach(function (item) {
-        item.classList.remove("selected");
-    });
-
-    document.getElementById("dente-" + denteAtual)?.classList.add("selected");
-    atualizarPainel();
-}
-
-function selecionarFace(dente, face, elemento) {
-    denteAtual = String(dente);
-    faceAtual = face;
-
-    document.querySelectorAll(
-        ".odonto-q-face"
-    ).forEach(function (item) {
-        item.classList.remove("selected");
-    });
-
-    document.querySelectorAll(
-        ".odonto-q-tooth"
-    ).forEach(function (item) {
-        item.classList.remove("selected");
-    });
-
-    elemento.classList.add("selected");
-    document.getElementById("dente-" + denteAtual)?.classList.add("selected");
-
-    atualizarPainel();
-}
-
-async function salvarDenteInteiro(estado) {
-    const resposta = await fetch(
-        urlSalvarDente,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                dente: denteAtual,
-                estado: estado,
-                observacao: document.getElementById("observacao").value
-            })
-        }
-    );
-
-    const dados = await resposta.json();
-
-    if (!resposta.ok || !dados.sucesso) {
-        throw new Error(dados.erro || "Não foi possível salvar.");
-    }
-
-    return dados;
-}
-
-async function salvarFace(estado) {
-    const resposta = await fetch(
-        urlSalvarFace,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                dente: denteAtual,
-                face: faceAtual,
-                estado: estado
-            })
-        }
-    );
-
-    const dados = await resposta.json();
-
-    if (!resposta.ok || !dados.sucesso) {
-        throw new Error(dados.erro || "Não foi possível salvar a face.");
-    }
-
-    return dados;
-}
-
-function limparClasses(elemento) {
-    if (!elemento) return;
-    classesEstados.forEach(function (classe) {
-        elemento.classList.remove(classe);
-    });
-}
-
-async function aplicarEstado(estado) {
-    if (!denteAtual) {
-        alert("Selecione um dente primeiro.");
-        return;
-    }
-
-    try {
-        if (faceAtual && faceAtual !== "Dente inteiro") {
-            await salvarFace(estado);
-
-            const chave = denteAtual + "|" + faceAtual;
-
-            const zona = document.querySelector(
-                '.odonto-q-face[data-dente="' +
-                denteAtual +
-                '"][data-face="' +
-                faceAtual +
-                '"]'
-            );
-
-            limparClasses(zona);
-
-            if (estado === "Limpar") {
-                delete facesDados[chave];
-            } else {
-                facesDados[chave] = estado;
-                zona?.classList.add(normalizarEstado(estado));
-            }
-
-        } else {
-            const dados = await salvarDenteInteiro(estado);
-
-            const dente = document.getElementById("dente-" + denteAtual);
-
-            limparClasses(dente);
-
-            if (estado === "Limpar") {
-                delete odontogramaDados[denteAtual];
-            } else {
-                odontogramaDados[denteAtual] = {
-                    ...(odontogramaDados[denteAtual] || {}),
-                    estado: dados.estado || estado,
-                    observacao: dados.observacao || document.getElementById("observacao").value
-                };
-                dente?.classList.add(normalizarEstado(estado));
-            }
-        }
-
-        atualizarPainel();
-        mostrarStatus("Informação salva.");
-
-    } catch (erro) {
-        mostrarStatus(erro.message, true);
-    }
-}
-
-async function salvarObservacao() {
-    if (!denteAtual) {
-        alert("Selecione um dente primeiro.");
-        return;
-    }
-
-    const estado =
-        odontogramaDados[denteAtual]?.estado || "Limpeza";
-
-    try {
-        const dados = await salvarDenteInteiro(estado);
-
-        odontogramaDados[denteAtual] = {
-            ...(odontogramaDados[denteAtual] || {}),
-            estado: dados.estado || estado,
-            observacao: document.getElementById("observacao").value
-        };
-
-        atualizarPainel();
-        mostrarStatus("Observação salva.");
-
-    } catch (erro) {
-        mostrarStatus(erro.message, true);
-    }
-}
-
-function mostrarStatus(mensagem, erro = false) {
-    const elemento =
-        document.getElementById("odontoStatus");
-
-    elemento.textContent = mensagem;
-    elemento.classList.toggle("erro", erro);
-
-    clearTimeout(mostrarStatus.timer);
-
-    mostrarStatus.timer = setTimeout(
-        function () {
-            elemento.textContent = "";
-        },
-        2600
-    );
-}
-
-document
-    .getElementById("formRegistroOdonto")
-    .addEventListener(
-        "submit",
-        function (evento) {
-            if (!denteAtual || !faceAtual) {
-                evento.preventDefault();
-                alert(
-                    "Selecione o dente inteiro ou uma face antes de adicionar o registro."
-                );
-            }
-        }
-    );
-</script>
-
-</body>
-</html>
+{% endblock %}

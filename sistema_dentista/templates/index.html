@@ -1,25 +1,12 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Clínica Odontológica</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='visual_modern.css', v=6) }}">
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Clínica Odontológica{% endblock %}
+
+{% block scripts %}
     <script src="{{ url_for('static', filename='app.js') }}"></script>
-</head>
-<body>
+{% endblock %}
 
-<header class="topbar">
-    <div class="logo">Dr. Tiago J. Lima</div>
-    <nav>
-        <a href="/" class="active">Dashboard</a>
-        <a href="/agenda">Agenda</a>
-        <a href="/pacientes">Pacientes</a>
-        <a href="/financeiro">Financeiro</a>
-    </nav>
-</header>
-
-<main class="container">
+{% block content %}
 
     <div class="page-header">
         <div>
@@ -27,12 +14,6 @@
             <p>Visão geral da clínica.</p>
         </div>
     </div>
-
-    {% with mensagens = get_flashed_messages(with_categories=true) %}
-        {% for categoria, mensagem in mensagens %}
-            <div class="alert {{ categoria }}">{{ mensagem }}</div>
-        {% endfor %}
-    {% endwith %}
 
     <div class="stats-grid">
         <div class="stat-card">
@@ -88,6 +69,4 @@
         </a>
     </div>
 
-</main>
-</body>
-</html>
+{% endblock %}

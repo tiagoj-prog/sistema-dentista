@@ -1,33 +1,13 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-    <title>Controle de tratamentos</title>
+{% extends "base.html" %}
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='visual_modern.css', v=6) }}"
-    >
+{% block title %}Controle de tratamentos{% endblock %}
+
+{% block scripts %}
     <script src="{{ url_for('static', filename='app.js') }}"></script>
-</head>
-<body>
+    <script src="{{ url_for('static', filename='mostrar_mais.js') }}"></script>
+{% endblock %}
 
-<header class="topbar">
-    <div class="logo">Dr. Tiago J. Lima</div>
-
-    <nav>
-        <a href="/">Dashboard</a>
-        <a href="/agenda">Agenda</a>
-        <a href="/pacientes" class="active">Pacientes</a>
-        <a href="/financeiro">Financeiro</a>
-    </nav>
-</header>
-
-<main class="container treatment-page">
+{% block content %}
 
     <div class="page-header">
         <div>
@@ -48,14 +28,6 @@
             ← Voltar ao perfil
         </a>
     </div>
-
-    {% with mensagens = get_flashed_messages(with_categories=true) %}
-        {% for categoria, mensagem in mensagens %}
-            <div class="alert {{ categoria }}">
-                {{ mensagem }}
-            </div>
-        {% endfor %}
-    {% endwith %}
 
     {% set planejados = tratamentos|selectattr("status", "equalto", "Planejado")|list %}
     {% set andamento = tratamentos|selectattr("status", "equalto", "Em andamento")|list %}
@@ -270,8 +242,4 @@
         {% endif %}
     </section>
 
-</main>
-
-<script src="{{ url_for('static', filename='mostrar_mais.js') }}"></script>
-</body>
-</html>
+{% endblock %}

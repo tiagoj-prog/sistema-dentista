@@ -209,3 +209,51 @@ def criar_banco():
 
     conexao.commit()
     conexao.close()
+
+
+def criar_indices():
+    """Cria índices para colunas usadas em filtros e buscas frequentes.
+
+    Usa CREATE INDEX IF NOT EXISTS para ser seguro em bancos existentes.
+    """
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    indices = [
+        ("idx_pacientes_nome", "pacientes", "nome"),
+        ("idx_pacientes_ativo", "pacientes", "ativo"),
+        ("idx_consultas_paciente", "consultas", "paciente_id"),
+        ("idx_consultas_data", "consultas", "data"),
+        ("idx_consultas_status", "consultas", "status"),
+        ("idx_agenda_data", "agenda_eventos", "data"),
+        ("idx_agenda_status", "agenda_eventos", "status"),
+        ("idx_agenda_nome", "agenda_eventos", "nome"),
+        ("idx_odontograma_paciente", "odontograma", "paciente_id"),
+        ("idx_odontograma_faces_paciente", "odontograma_faces", "paciente_id"),
+        ("idx_odontograma_proc_paciente", "odontograma_procedimentos", "paciente_id"),
+        ("idx_odontograma_proc_data", "odontograma_procedimentos", "data_procedimento"),
+        ("idx_orcamentos_paciente", "orcamentos", "paciente_id"),
+        ("idx_contas_receber_paciente", "contas_receber", "paciente_id"),
+        ("idx_contas_receber_status", "contas_receber", "status"),
+        ("idx_contas_receber_vencimento", "contas_receber", "vencimento"),
+        ("idx_contas_pagar_status", "contas_pagar", "status"),
+        ("idx_contas_pagar_vencimento", "contas_pagar", "vencimento"),
+        ("idx_movimentacoes_data", "movimentacoes", "data"),
+        ("idx_movimentacoes_tipo", "movimentacoes", "tipo"),
+        ("idx_tratamentos_paciente", "tratamentos", "paciente_id"),
+        ("idx_tratamentos_status", "tratamentos", "status"),
+        ("idx_contas_orcamento_paciente", "contas_orcamento", "paciente_id"),
+        ("idx_contas_orcamento_status", "contas_orcamento", "status"),
+    ]
+
+    for nome, tabela, coluna in indices:
+        try:
+            cursor.execute(
+                f"CREATE INDEX IF NOT EXISTS {nome} "
+                f"ON {tabela} ({coluna})"
+            )
+        except sqlite3.Error:
+            pass
+
+    conexao.commit()
+    conexao.close()

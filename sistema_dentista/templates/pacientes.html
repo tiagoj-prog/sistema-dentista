@@ -1,28 +1,13 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pacientes</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='visual_modern.css', v=6) }}">
-</head>
+{% extends "base.html" %}
 
-<script src="{{ url_for('static', filename='mostrar_mais.js') }}"></script>
-<script src="{{ url_for('static', filename='app.js') }}"></script>
+{% block title %}Pacientes{% endblock %}
 
-<body>
+{% block scripts %}
+    <script src="{{ url_for('static', filename='mostrar_mais.js') }}"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+{% endblock %}
 
-<header class="topbar">
-    <div class="logo">Dr. Tiago J. Lima</div>
-    <nav>
-        <a href="/">Dashboard</a>
-        <a href="/agenda">Agenda</a>
-        <a href="/pacientes" class="active">Pacientes</a>
-        <a href="/financeiro">Financeiro</a>
-    </nav>
-</header>
-
-<main class="container">
+{% block content %}
 
     <div class="page-header">
         <div>
@@ -30,12 +15,6 @@
             <p>Pesquise pelo nome e abra o perfil completo.</p>
         </div>
     </div>
-
-    {% with mensagens = get_flashed_messages(with_categories=true) %}
-        {% for categoria, mensagem in mensagens %}
-            <div class="alert {{ categoria }}">{{ mensagem }}</div>
-        {% endfor %}
-    {% endwith %}
 
     <section class="search-card">
         <form action="/pacientes" method="GET">
@@ -187,6 +166,5 @@
             </div>
         {% endif %}
     </section>
-</main>
-</body>
-</html>
+
+{% endblock %}
