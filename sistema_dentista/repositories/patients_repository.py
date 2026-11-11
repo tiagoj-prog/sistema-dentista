@@ -43,69 +43,130 @@ def _garantir_campos_identificacao():
 
 
 
+from ..validators import validar_cpf, validar_telefone
+
+
 def cadastrar_paciente(nome, telefone):
+    nome = (nome or "").strip()
+    telefone = (telefone or "").strip()
+
+    if not nome:
+        raise ValueError("Nome é obrigatório.")
+
+    if not validar_telefone(telefone):
+        raise ValueError(
+            "Telefone inválido. Use DDD + número "
+            "(ex.: 11999999999)."
+        )
+
     conexao = conectar()
     cursor = conexao.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO pacientes (nome, telefone, ativo)
         VALUES (?, ?, 1)
-    """, (nome.strip(), telefone.strip()))
+        """,
+        (nome, telefone),
+    )
 
     conexao.commit()
     conexao.close()
 
 
-def listar_pacientes(busca=""):
+def listar_pacientes(busca="", pagina=1, por_pagina=20):
     _garantir_campos_identificacao()
 
     conexao = conectar()
     cursor = conexao.cursor()
 
+    offset = (pagina - 1) * por_pagina
+
     if busca:
-        cursor.execute("""
+        cursor.execute(
+            """
+            SELECT COUNT(*) FROM pacientes
+            WHERE ativo = 1 AND nome LIKE ?
+            """,
+            (f"%{busca}%",),
+        )
+        total = cursor.fetchone()[0]
+
+        cursor.execute(
+            """
             SELECT id, nome, telefone, ativo, prontuario, anamnese, endereco, cpf, rg, data_nascimento, tem_responsavel, responsavel_nome, responsavel_cpf, responsavel_relacao
             FROM pacientes
             WHERE ativo = 1
               AND nome LIKE ?
             ORDER BY nome
-        """, (f"%{busca}%",))
+            LIMIT ? OFFSET ?
+            """,
+            (f"%{busca}%", por_pagina, offset),
+        )
     else:
-        cursor.execute("""
+        cursor.execute(
+            "SELECT COUNT(*) FROM pacientes WHERE ativo = 1"
+        )
+        total = cursor.fetchone()[0]
+
+        cursor.execute(
+            """
             SELECT id, nome, telefone, ativo, prontuario, anamnese, endereco, cpf, rg, data_nascimento, tem_responsavel, responsavel_nome, responsavel_cpf, responsavel_relacao
             FROM pacientes
             WHERE ativo = 1
             ORDER BY nome
-        """)
+            LIMIT ? OFFSET ?
+            """,
+            (por_pagina, offset),
+        )
 
     pacientes = cursor.fetchall()
     conexao.close()
-    return pacientes
+    return pacientes, total
 
 
-def listar_todos_pacientes(busca=""):
+def listar_todos_pacientes(busca="", pagina=1, por_pagina=20):
     _garantir_campos_identificacao()
 
     conexao = conectar()
     cursor = conexao.cursor()
 
+    offset = (pagina - 1) * por_pagina
+
     if busca:
-        cursor.execute("""
+        cursor.execute(
+            "SELECT COUNT(*) FROM pacientes WHERE nome LIKE ?",
+            (f"%{busca}%",),
+        )
+        total = cursor.fetchone()[0]
+
+        cursor.execute(
+            """
             SELECT id, nome, telefone, ativo, prontuario, anamnese, endereco, cpf, rg, data_nascimento, tem_responsavel, responsavel_nome, responsavel_cpf, responsavel_relacao
             FROM pacientes
             WHERE nome LIKE ?
             ORDER BY ativo DESC, nome
-        """, (f"%{busca}%",))
+            LIMIT ? OFFSET ?
+            """,
+            (f"%{busca}%", por_pagina, offset),
+        )
     else:
-        cursor.execute("""
+        cursor.execute("SELECT COUNT(*) FROM pacientes")
+        total = cursor.fetchone()[0]
+
+        cursor.execute(
+            """
             SELECT id, nome, telefone, ativo, prontuario, anamnese, endereco, cpf, rg, data_nascimento, tem_responsavel, responsavel_nome, responsavel_cpf, responsavel_relacao
             FROM pacientes
             ORDER BY ativo DESC, nome
-        """)
+            LIMIT ? OFFSET ?
+            """,
+            (por_pagina, offset),
+        )
 
     pacientes = cursor.fetchall()
     conexao.close()
-    return pacientes
+    return pacientes, total
 
 
 def obter_paciente(paciente_id):
@@ -140,6 +201,24 @@ def atualizar_paciente(
     responsavel_cpf="",
     responsavel_relacao=""
 ):
+    nome = (nome or "").strip()
+    telefone = (telefone or "").strip()
+
+    if not nome:
+        raise ValueError("Nome é obrigatório.")
+
+    if not validar_telefone(telefone):
+        raise ValueError(
+            "Telefone inválido. Use DDD + número "
+            "(ex.: 11999999999)."
+        )
+
+    if not validar_cpf(cpf):
+        raise ValueError("CPF inválido.")
+
+    if not validar_cpf(responsavel_cpf):
+        raise ValueError("CPF do responsável inválido.")
+
     _garantir_campos_identificacao()
 
     conexao = conectar()

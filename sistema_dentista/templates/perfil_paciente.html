@@ -364,6 +364,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         inputmode="numeric"
                         maxlength="14"
                         autocomplete="off"
+                        pattern="[0-9]{11}"
+                        title="CPF com 11 dígitos (ou deixe vazio)"
                     >
                 </div>
 
@@ -455,6 +457,8 @@ document.addEventListener("DOMContentLoaded", function () {
                                 inputmode="numeric"
                                 maxlength="14"
                                 autocomplete="off"
+                                pattern="[0-9]{11}"
+                                title="CPF com 11 dígitos"
                             >
                         </div>
 
@@ -500,6 +504,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         name="telefone"
                         value="{{ paciente['telefone'] }}"
                         required
+                        pattern="[0-9]{10,11}"
+                        title="DDD + número (10 ou 11 dígitos)"
                     >
                 </div>
 

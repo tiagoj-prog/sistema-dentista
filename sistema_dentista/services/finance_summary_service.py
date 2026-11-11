@@ -29,7 +29,7 @@ def _float(valor):
 
 def calcular_resumo_dashboard():
     consultas = listar_consultas()
-    pacientes = listar_pacientes()
+    pacientes, _ = listar_pacientes(por_pagina=100000)
 
     receber = listar_contas_receber()
     pagar = listar_contas_pagar()
@@ -86,7 +86,7 @@ def carregar_dados_financeiros(ano_solicitado=None):
     )
 
     despesas_recorrentes = listar_despesas_recorrentes()
-    pacientes = listar_pacientes()
+    pacientes, _ = listar_pacientes(por_pagina=100000)
 
     total_receber = sum(
         _float(item["valor"] or 0)

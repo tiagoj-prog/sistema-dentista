@@ -1,3 +1,5 @@
+import csv
+import io
 from flask import ( # pyright: ignore[reportMissingImports]
     Flask,
     render_template,
@@ -161,12 +163,23 @@ def create_flask_app():
     @app.route("/pacientes")
     def pacientes():
         busca = request.args.get("busca", "").strip()
-    
-        pacientes_lista = listar_todos_pacientes(busca)
-    
+        pagina = request.args.get("page", 1, type=int)
+        if pagina < 1:
+            pagina = 1
+
+        pacientes_lista, total = listar_todos_pacientes(
+            busca, pagina=pagina, por_pagina=20
+        )
+
+        total_paginas = max(1, (total + 19) // 20)
+
         return render_template(
             "pacientes.html",
-            pacientes=pacientes_lista
+            pacientes=pacientes_lista,
+            busca=busca,
+            pagina=pagina,
+            total=total,
+            total_paginas=total_paginas,
         )
     
     
@@ -174,21 +187,58 @@ def create_flask_app():
     def cadastrar_paciente_web():
         nome = request.form.get("nome", "").strip()
         telefone = request.form.get("telefone", "").strip()
-    
+
         if not nome or not telefone:
             flash("Preencha todos os campos.", "erro")
             return redirect(url_for("pacientes"))
-    
-        cadastrar_paciente(nome, telefone)
-    
+
+        try:
+            cadastrar_paciente(nome, telefone)
+        except ValueError as erro:
+            flash(str(erro), "erro")
+            return redirect(url_for("pacientes"))
+
         flash(
             "Paciente cadastrado com sucesso!",
             "sucesso"
         )
-    
+
         return redirect(url_for("pacientes"))
     
     
+    @app.route("/pacientes/exportar")
+    def exportar_pacientes_csv():
+        pacientes_lista, _ = listar_todos_pacientes(por_pagina=100000)
+
+        buffer = io.StringIO()
+        escritor = csv.writer(buffer, delimiter=";", quoting=csv.QUOTE_MINIMAL)
+        escritor.writerow([
+            "ID", "Nome", "Telefone", "Status", "CPF", "RG",
+            "Data de nascimento", "Endereço", "Prontuário", "Anamnese",
+        ])
+
+        for paciente in pacientes_lista:
+            escritor.writerow([
+                paciente["id"],
+                paciente["nome"],
+                paciente["telefone"],
+                "Ativo" if paciente["ativo"] == 1 else "Inativo",
+                paciente["cpf"] or "",
+                paciente["rg"] or "",
+                paciente["data_nascimento"] or "",
+                paciente["endereco"] or "",
+                paciente["prontuario"] or "",
+                paciente["anamnese"] or "",
+            ])
+
+        resposta = app.response_class(
+            buffer.getvalue(),
+            mimetype="text/csv; charset=utf-8",
+        )
+        resposta.headers["Content-Disposition"] = (
+            "attachment; filename=pacientes.csv"
+        )
+        return resposta
     @app.route("/pacientes/perfil/<int:paciente_id>")
     def perfil_paciente(paciente_id):
         paciente = obter_paciente(paciente_id)
@@ -497,22 +547,31 @@ def create_flask_app():
                 )
             )
     
-        atualizar_paciente(
-            paciente_id,
-            nome,
-            telefone,
-            prontuario,
-            anamnese,
-            endereco,
-            cpf,
-            rg,
-            data_nascimento,
-            tem_responsavel,
-            responsavel_nome,
-            responsavel_cpf,
-            responsavel_relacao
-        )
-    
+        try:
+            atualizar_paciente(
+                paciente_id,
+                nome,
+                telefone,
+                prontuario,
+                anamnese,
+                endereco,
+                cpf,
+                rg,
+                data_nascimento,
+                tem_responsavel,
+                responsavel_nome,
+                responsavel_cpf,
+                responsavel_relacao
+            )
+        except ValueError as erro:
+            flash(str(erro), "erro")
+            return redirect(
+                url_for(
+                    "perfil_paciente",
+                    paciente_id=paciente_id
+                )
+            )
+
         flash(
             "Perfil atualizado com sucesso!",
             "sucesso"
@@ -610,7 +669,7 @@ def create_flask_app():
     
         # A Agenda continua independente: os pacientes cadastrados
         # são usados apenas como sugestões para preencher nome/telefone.
-        pacientes_agenda = listar_pacientes()
+        pacientes_agenda, _ = listar_pacientes(por_pagina=100000)
     
         return render_template(
             "agenda.html",
@@ -1219,6 +1278,62 @@ def create_flask_app():
     # FINANCEIRO
     # =========================================
     
+    @app.route("/financeiro/exportar")
+    def exportar_financeiro_csv():
+        resumo = carregar_dados_financeiros()
+
+        buffer = io.StringIO()
+        escritor = csv.writer(buffer, delimiter=";", quoting=csv.QUOTE_MINIMAL)
+
+        escritor.writerow(["=== CONTAS A RECEBER ==="])
+        escritor.writerow([
+            "ID", "Paciente", "Descrição", "Valor", "Vencimento", "Status",
+        ])
+        for conta in resumo["receber"]:
+            escritor.writerow([
+                conta["id"],
+                conta["paciente_nome"] or "Sem paciente",
+                conta["descricao"],
+                f"{conta['valor']:.2f}".replace(".", ","),
+                conta["vencimento"],
+                conta["status"],
+            ])
+
+        escritor.writerow([])
+        escritor.writerow(["=== CONTAS A PAGAR ==="])
+        escritor.writerow([
+            "ID", "Fornecedor", "Descrição", "Valor", "Vencimento", "Status",
+        ])
+        for conta in resumo["pagar"]:
+            escritor.writerow([
+                conta["id"],
+                conta["fornecedor"] or "-",
+                conta["descricao"],
+                f"{conta['valor']:.2f}".replace(".", ","),
+                conta["vencimento"],
+                conta["status"],
+            ])
+
+        escritor.writerow([])
+        escritor.writerow(["=== MOVIMENTAÇÕES DO MÊS ==="])
+        escritor.writerow(["Data", "Descrição", "Tipo", "Valor"])
+        for mov in resumo["movimentacoes"]:
+            escritor.writerow([
+                mov["data"],
+                mov["descricao"],
+                mov["tipo"],
+                f"{mov['valor']:.2f}".replace(".", ","),
+            ])
+
+        resposta = app.response_class(
+            buffer.getvalue(),
+            mimetype="text/csv; charset=utf-8",
+        )
+        resposta.headers["Content-Disposition"] = (
+            "attachment; filename=financeiro.csv"
+        )
+        return resposta
+
     @app.route("/financeiro")
     def financeiro():
         resumo_financeiro = carregar_dados_financeiros(

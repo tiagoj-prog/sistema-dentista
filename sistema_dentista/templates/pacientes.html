@@ -14,6 +14,9 @@
             <h1>Pacientes</h1>
             <p>Pesquise pelo nome e abra o perfil completo.</p>
         </div>
+        <a href="/pacientes/exportar" class="button secondary-button">
+            Exportar CSV
+        </a>
     </div>
 
     <section class="search-card">
@@ -47,7 +50,7 @@
 
                 <div class="form-group">
                     <label>WhatsApp</label>
-                    <input type="tel" name="telefone" placeholder="11999999999" required>
+                    <input type="tel" name="telefone" placeholder="11999999999" required pattern="[0-9]{10,11}" title="Digite 10 ou 11 dígitos (DDD + número)">
                 </div>
             </div>
 
@@ -164,6 +167,21 @@
                     <p>Cadastre o primeiro paciente acima.</p>
                 {% endif %}
             </div>
+        {% endif %}
+        {% if total_paginas > 1 %}
+        <div class="pagination">
+            {% if pagina > 1 %}
+                <a href="/pacientes?page={{ pagina - 1 }}{% if busca %}&busca={{ busca }}{% endif %}" class="button secondary-button">
+                    ← Anterior
+                </a>
+            {% endif %}
+            <span>Página {{ pagina }} de {{ total_paginas }} ({{ total }} paciente(s))</span>
+            {% if pagina < total_paginas %}
+                <a href="/pacientes?page={{ pagina + 1 }}{% if busca %}&busca={{ busca }}{% endif %}" class="button primary">
+                    Próxima →
+                </a>
+            {% endif %}
+        </div>
         {% endif %}
     </section>
 
