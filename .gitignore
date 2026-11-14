@@ -23,6 +23,9 @@ backups/
 # Banco de demonstração gerado por scripts/seed_demo.py
 demo/
 
+# Arquivos enviados (anexos de pacientes)
+uploads/
+
 # Cache e temporários
 .pytest_cache/
 .cache/

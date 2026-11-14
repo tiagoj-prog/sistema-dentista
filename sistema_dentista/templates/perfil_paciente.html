@@ -1045,4 +1045,88 @@ document.addEventListener("DOMContentLoaded", function () {
 <!-- =====================================================
         RESPONSÁVEL
     ====================================================== -->
+    <!-- =====================================================
+         ANEXOS (raio-X, fotos, documentos)
+    ====================================================== -->
+    <section class="table-card">
+        <div class="section-title">
+            <div>
+                <h2>Anexos</h2>
+                <p class="section-description">
+                    Raio-X, fotos e documentos do paciente.
+                </p>
+            </div>
+        </div>
+
+        <form
+            action="{{ url_for('adicionar_anexo_web', paciente_id=paciente['id']) }}"
+            method="POST"
+            enctype="multipart/form-data"
+            class="inline-form"
+        >
+            <input
+                type="file"
+                name="arquivo"
+                required
+            >
+            <button type="submit" class="button primary">
+                + Adicionar anexo
+            </button>
+        </form>
+
+        {% if anexos %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Arquivo</th>
+                        <th>Tipo</th>
+                        <th>Tamanho</th>
+                        <th>Data</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for anexo in anexos %}
+                    <tr>
+                        <td>{{ anexo["nome_original"] }}</td>
+                        <td>{{ anexo["tipo"] or "-" }}</td>
+                        <td>{{ (anexo["tamanho"] / 1024)|round(1) }} KB</td>
+                        <td>{{ anexo["criado_em"] }}</td>
+                        <td>
+                            <div class="actions">
+                                <a
+                                    href="{{ url_for('baixar_anexo_web', paciente_id=paciente['id'], anexo_id=anexo['id']) }}"
+                                    class="profile-button"
+                                >
+                                    Baixar
+                                </a>
+                                <form
+                                    action="{{ url_for('excluir_anexo_web', paciente_id=paciente['id'], anexo_id=anexo['id']) }}"
+                                    method="POST"
+                                >
+                                    <button
+                                        type="submit"
+                                        class="delete-button"
+                                        onclick="return confirm('Excluir este anexo? Esta ação não pode ser desfeita.');"
+                                    >
+                                        Excluir
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div class="empty small-empty">
+                <span></span>
+                <h3>Nenhum anexo</h3>
+                <p>Adicione raio-X, fotos ou documentos do paciente.</p>
+            </div>
+        {% endif %}
+    </section>
+
 {% endblock %}

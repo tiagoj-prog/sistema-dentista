@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Inadimplência - Sistema Dentista{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+
+    <div class="page-header">
+        <div>
+            <h1>Relatório de inadimplência</h1>
+            <p>Contas vencidas e não pagas.</p>
+        </div>
+        <a href="/financeiro" class="button secondary-button">
+            ← Voltar ao financeiro
+        </a>
+    </div>
+
+    <div class="stats-grid finance-stats">
+        <div class="stat-card negative">
+            <span>A receber vencido</span>
+            <strong>R$ {{ "%.2f"|format(total_receber)|replace(".", ",") }}</strong>
+            <small>{{ receber|length }} conta(s)</small>
+        </div>
+
+        <div class="stat-card negative">
+            <span>A pagar vencido</span>
+            <strong>R$ {{ "%.2f"|format(total_pagar)|replace(".", ",") }}</strong>
+            <small>{{ pagar|length }} conta(s)</small>
+        </div>
+    </div>
+
+    <section class="table-card">
+        <div class="section-title">
+            <div>
+                <h2>Contas a receber vencidas</h2>
+                <p class="section-description">
+                    Valores que os pacientes deveriam ter pago e ainda não pagaram.
+                </p>
+            </div>
+        </div>
+
+        {% if receber %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Paciente</th>
+                        <th>Descrição</th>
+                        <th>Vencimento</th>
+                        <th>Valor</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for conta in receber %}
+                    <tr>
+                        <td>{{ conta["paciente_nome"] or "Sem paciente" }}</td>
+                        <td>{{ conta["descricao"] }}</td>
+                        <td>{{ conta["vencimento"] }}</td>
+                        <td>
+                            <strong>R$ {{ "%.2f"|format(conta["valor"])|replace(".", ",") }}</strong>
+                        </td>
+                        <td>
+                            <form
+                                action="{{ url_for('pagar_receber_web', conta_id=conta['id']) }}"
+                                method="POST"
+                            >
+                                <button class="small-button confirm" type="submit">
+                                    ✓ Pago
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div class="empty small-empty">
+                <span></span>
+                <h3>Nenhuma conta a receber vencida</h3>
+                <p>Todos os recebimentos estão em dia.</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="table-card">
+        <div class="section-title">
+            <div>
+                <h2>Contas a pagar vencidas</h2>
+                <p class="section-description">
+                    Despesas da clínica que venceram e não foram pagas.
+                </p>
+            </div>
+        </div>
+
+        {% if pagar %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fornecedor</th>
+                        <th>Descrição</th>
+                        <th>Vencimento</th>
+                        <th>Valor</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for conta in pagar %}
+                    <tr>
+                        <td>{{ conta["fornecedor"] or "-" }}</td>
+                        <td>{{ conta["descricao"] }}</td>
+                        <td>{{ conta["vencimento"] }}</td>
+                        <td>
+                            <strong>R$ {{ "%.2f"|format(conta["valor"])|replace(".", ",") }}</strong>
+                        </td>
+                        <td>
+                            <form
+                                action="{{ url_for('pagar_conta_web', conta_id=conta['id']) }}"
+                                method="POST"
+                            >
+                                <button class="small-button confirm" type="submit">
+                                    ✓ Pago
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div class="empty small-empty">
+                <span></span>
+                <h3>Nenhuma conta a pagar vencida</h3>
+                <p>Todas as despesas estão em dia.</p>
+            </div>
+        {% endif %}
+    </section>
+
+{% endblock %}

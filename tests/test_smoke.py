@@ -50,6 +50,10 @@ ESPERADOS = {
     "excluir_movimentacao_web",
     "excluir_receber_web",
     "excluir_pagar_web",
+    "inadimplencia",
+    "adicionar_anexo_web",
+    "baixar_anexo_web",
+    "excluir_anexo_web",
     "exportar_pacientes_csv",
     "exportar_financeiro_csv",
 }
@@ -71,7 +75,7 @@ class TestSmoke(unittest.TestCase):
             for rule in app.url_map.iter_rules()
             if rule.endpoint != "static"
         ]
-        self.assertEqual(len(rules), 41)
+        self.assertEqual(len(rules), 45)
 
     def test_expected_endpoints_exist(self):
         app = create_flask_app()

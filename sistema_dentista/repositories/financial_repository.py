@@ -157,6 +157,31 @@ def excluir_conta_receber(conta_id):
 # CONTAS A PAGAR
 # -------------------------
 
+def listar_contas_vencidas_receber():
+    from datetime import date
+
+    hoje = date.today().isoformat()
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    cursor.execute("""
+        SELECT
+            contas_receber.*,
+            pacientes.nome AS paciente_nome
+        FROM contas_receber
+        LEFT JOIN pacientes
+            ON pacientes.id = contas_receber.paciente_id
+        WHERE contas_receber.status != 'Pago'
+          AND contas_receber.valor > 0.000001
+          AND contas_receber.vencimento < ?
+        ORDER BY contas_receber.vencimento, contas_receber.id DESC
+    """, (hoje,))
+
+    registros = cursor.fetchall()
+    conexao.close()
+    return registros
+
+
 def listar_contas_pagar():
     conexao = conectar()
     cursor = conexao.cursor()
@@ -166,6 +191,27 @@ def listar_contas_pagar():
         FROM contas_pagar
         ORDER BY vencimento, id DESC
     """)
+
+    registros = cursor.fetchall()
+    conexao.close()
+    return registros
+
+
+def listar_contas_vencidas_pagar():
+    from datetime import date
+
+    hoje = date.today().isoformat()
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM contas_pagar
+        WHERE status != 'Pago'
+          AND valor > 0.000001
+          AND vencimento < ?
+        ORDER BY vencimento, id DESC
+    """, (hoje,))
 
     registros = cursor.fetchall()
     conexao.close()

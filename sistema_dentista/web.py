@@ -1,5 +1,6 @@
 import csv
 import io
+import os
 from flask import ( # pyright: ignore[reportMissingImports]
     Flask,
     render_template,
@@ -13,6 +14,7 @@ from datetime import date
 from sistema_dentista.database.connection import (
     criar_banco,
     criar_indices,
+    criar_tabela_anexos,
 )
 
 from .repositories.patients_repository import (
@@ -81,6 +83,19 @@ from .repositories.treatments_repository import (
 
 from .services.backup_service import verificar_backup_mensal
 
+from .services.finance_summary_service import (
+    calcular_resumo_dashboard,
+    carregar_dados_financeiros,
+)
+
+from .repositories.attachments_repository import (
+    listar_anexos,
+    adicionar_anexo,
+    excluir_anexo,
+    caminho_anexo,
+    PASTA_UPLOADS,
+)
+
 
 from .config import (
     TEMPLATES_DIR,
@@ -88,9 +103,9 @@ from .config import (
     SECRET_KEY,
 )
 
-from .services.finance_summary_service import (
-    calcular_resumo_dashboard,
-    carregar_dados_financeiros,
+from .repositories.financial_repository import (
+    listar_contas_vencidas_receber,
+    listar_contas_vencidas_pagar,
 )
 
 
@@ -317,7 +332,8 @@ def create_flask_app():
             contas_quitadas=contas_quitadas,
             idade=idade,
             data_nascimento_formatada=data_nascimento_formatada,
-            hoje=date.today().isoformat()
+            hoje=date.today().isoformat(),
+            anexos=listar_anexos(paciente_id),
         )
     
     
@@ -585,6 +601,111 @@ def create_flask_app():
         )
     
     
+    
+    # =========================================
+    # ANEXOS (raio-X, fotos, documentos)
+    # =========================================
+
+    @app.route(
+        "/pacientes/<int:paciente_id>/anexo/adicionar",
+        methods=["POST"]
+    )
+    def adicionar_anexo_web(paciente_id):
+        paciente = obter_paciente(paciente_id)
+        if paciente is None:
+            flash("Paciente não encontrado.", "erro")
+            return redirect(url_for("pacientes"))
+
+        arquivo = request.files.get("arquivo")
+        if not arquivo or not arquivo.filename:
+            flash("Selecione um arquivo.", "erro")
+            return redirect(
+                url_for("perfil_paciente", paciente_id=paciente_id)
+            )
+
+        from werkzeug.utils import secure_filename
+        import uuid
+
+        PASTA_UPLOADS.mkdir(parents=True, exist_ok=True)
+
+        nome_original = arquivo.filename
+        extensao = os.path.splitext(nome_original)[1]
+        nome_arquivo = f"{uuid.uuid4().hex}{extensao}"
+        caminho_destino = caminho_anexo(nome_arquivo)
+
+        try:
+            arquivo.save(str(caminho_destino))
+        except Exception as erro:
+            app.logger.exception("Erro ao salvar anexo: %s", erro)
+            flash("Não foi possível salvar o arquivo.", "erro")
+            return redirect(
+                url_for("perfil_paciente", paciente_id=paciente_id)
+            )
+
+        tamanho = os.path.getsize(caminho_destino)
+        tipo = arquivo.content_type or ""
+
+        adicionar_anexo(
+            paciente_id,
+            nome_original,
+            nome_arquivo,
+            tipo,
+            tamanho,
+        )
+
+        flash("Anexo adicionado com sucesso.", "sucesso")
+        return redirect(
+            url_for("perfil_paciente", paciente_id=paciente_id)
+        )
+
+    @app.route(
+        "/pacientes/<int:paciente_id>/anexo/<int:anexo_id>"
+    )
+    def baixar_anexo_web(paciente_id, anexo_id):
+        anexos = listar_anexos(paciente_id)
+        anexo = None
+        for item in anexos:
+            if item["id"] == anexo_id:
+                anexo = item
+                break
+
+        if anexo is None:
+            flash("Anexo não encontrado.", "erro")
+            return redirect(
+                url_for("perfil_paciente", paciente_id=paciente_id)
+            )
+
+        from flask import send_file
+
+        caminho = caminho_anexo(anexo["nome_arquivo"])
+        if not caminho.exists():
+            flash("Arquivo não encontrado no servidor.", "erro")
+            return redirect(
+                url_for("perfil_paciente", paciente_id=paciente_id)
+            )
+
+        return send_file(
+            str(caminho),
+            as_attachment=True,
+            download_name=anexo["nome_original"],
+        )
+
+    @app.route(
+        "/pacientes/<int:paciente_id>/anexo/<int:anexo_id>/excluir",
+        methods=["POST"]
+    )
+    def excluir_anexo_web(paciente_id, anexo_id):
+        try:
+            excluir_anexo(anexo_id, paciente_id)
+        except ValueError as erro:
+            flash(str(erro), "erro")
+        else:
+            flash("Anexo excluído.", "sucesso")
+
+        return redirect(
+            url_for("perfil_paciente", paciente_id=paciente_id)
+        )
+
     @app.route(
         "/pacientes/desativar/<int:paciente_id>",
         methods=["POST"]
@@ -1334,6 +1455,26 @@ def create_flask_app():
         )
         return resposta
 
+    @app.route("/financeiro/inadimplencia")
+    def inadimplencia():
+        receber = listar_contas_vencidas_receber()
+        pagar = listar_contas_vencidas_pagar()
+
+        total_receber = sum(
+            float(c["valor"]) for c in receber
+        )
+        total_pagar = sum(
+            float(c["valor"]) for c in pagar
+        )
+
+        return render_template(
+            "inadimplencia.html",
+            receber=receber,
+            pagar=pagar,
+            total_receber=total_receber,
+            total_pagar=total_pagar,
+        )
+
     @app.route("/financeiro")
     def financeiro():
         resumo_financeiro = carregar_dados_financeiros(
@@ -1704,6 +1845,7 @@ def create_flask_app():
 def initialize_database():
     criar_banco()
     criar_indices()
+    criar_tabela_anexos()
     criar_tabelas_conta_paciente()
     criar_tabela_odontograma()
     criar_tabelas_contas_individuais()

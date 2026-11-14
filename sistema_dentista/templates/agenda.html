@@ -735,12 +735,68 @@ function abrirEvento(elemento) {
         botaoWhatsApp.style.display =
             "inline-flex";
 
+        /* ============================
+           LEMBRETE DE CONSULTA
+        ============================ */
+        const botaoLembrete =
+            document.getElementById(
+                "botaoLembreteAgenda"
+            );
+
+        if (botaoLembrete) {
+            const mensagemLembrete =
+                "Olá, "
+                + nome
+                + "! Tudo bem?\n\n"
+                + "Lembramos do seu agendamento "
+                + "na clínica odontológica:\n\n"
+                + " "
+                + titulo
+                + "\n"
+                + " Data: "
+                + dataFormatada
+                + "\n"
+                + " Horário: "
+                + inicio
+                + " às "
+                + fim
+                + "\n\n"
+                + "Caso precise remarcar, "
+                + "entre em contato conosco.\n\n"
+                + "Até breve!";
+
+            const linkLembrete =
+                "https://wa.me/"
+                + telefone
+                + "?text="
+                + encodeURIComponent(
+                    mensagemLembrete
+                );
+
+            botaoLembrete.href =
+                linkLembrete;
+
+            botaoLembrete.style.display =
+                "inline-flex";
+        }
+
     } else {
 
         botaoWhatsApp.href = "#";
 
         botaoWhatsApp.style.display =
             "none";
+
+        const botaoLembrete2 =
+            document.getElementById(
+                "botaoLembreteAgenda"
+            );
+
+        if (botaoLembrete2) {
+            botaoLembrete2.href = "#";
+            botaoLembrete2.style.display =
+                "none";
+        }
     }
 
 
@@ -1416,6 +1472,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 style="display: none;"
             >
                  WhatsApp
+            </a>
+            <a
+                href="#"
+                id="botaoLembreteAgenda"
+                class="small-button"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="display: none;"
+            >
+                 Lembrete
             </a>
             <form method="POST" id="formConfirmar">
                 <button class="small-button confirm" type="submit">
